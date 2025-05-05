@@ -1,4 +1,10 @@
-﻿<style>
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mebrej Speciality Dermatology Clinic</title>
+<style>
   form {
     font-family: Arial, sans-serif;
     max-width: 500px;
@@ -83,10 +89,34 @@ th {
 td:first-child {
   width: 30%;
 }
+
+.nav-links {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.nav-links a {
+  display: inline-block;
+  padding: 8px 15px;
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  margin: 0 10px;
+}
+
+.nav-links a:hover {
+  background-color: #3e8e41;
+}
  
 </style>
+</head>
+<body>
+<div class="nav-links">
+  <a href="queue.html">View Patient Queue</a>
+</div>
 
-<form>
+<form id="patientForm" onsubmit="saveFormData(event)">
  <h3>መብረጅ ስፔሻሊቲ የቆዳ ክሊኒክ</br>
   Mebrej Speciality Dermatology Clinic</br>
  
@@ -103,8 +133,8 @@ td:first-child {
 
 
 <div class="subfield">
-   <label for="Card Number">Card Number</label>
-   <input type="text" id="town" name="Card Number"><br>
+   <label for="cardNumber">Card Number</label>
+   <input type="text" id="cardNumber" name="cardNumber"><br>
 
 <label for="date">Date:</label>
    <input type="text" id="date" name="date">
@@ -113,36 +143,101 @@ td:first-child {
 
 
 
-  <label for="Patient Name">ስም:</label>
-  <input type="text" id="region" name="Patient Name">
+  <label for="patientName">ስም:</label>
+  <input type="text" id="patientName" name="patientName">
 
 <div class="subfield">
-  <label for="Age">ዕድሜ:</label>
-  <input type="text" id="town" name="Age">
+  <label for="age">ዕድሜ:</label>
+  <input type="text" id="age" name="age">
 </div>
 <div class="subfield">
-  <label for="Sex">ጾታ:</label>
-  <input type="text" id="Sex" name="Sex">
+  <label for="sex">ጾታ:</label>
+  <input type="text" id="sex" name="sex">
 </div><br>
  <div class="subfield">
-  <label for="adress">አድራሻ:</label>
-   <input type="text" id="region" name="region">
+  <label for="address">አድራሻ:</label>
+   <input type="text" id="address" name="address">
  </div> 
 <div class="subfield">
-   <label for="region">ወረዳ:</label>
-   <input type="text" id="region" name="region">
+   <label for="wereda">ወረዳ:</label>
+   <input type="text" id="wereda" name="wereda">
  </div>
  <div class="subfield">
-   <label for="town">ቀበሌ:</label>
-   <input type="text" id="town" name="town">
+   <label for="kebele">ቀበሌ:</label>
+   <input type="text" id="kebele" name="kebele">
  </div>
  <div class="subfield">
-   <label for="telephone-number">ስልክ ቁጥር:</label>
-   <input type="text" id="telephone-number" name="telephone-number"><br>
+   <label for="phoneNumber">ስልክ ቁጥር:</label>
+   <input type="text" id="phoneNumber" name="phoneNumber"><br>
  </div><br> <br>
    
 
- <input type="submit" value="Submit" onClick="window.print()">
+ <input type="submit" value="Submit and Print">
   
 
 </form>
+
+<script>
+  // Set today's date by default
+  document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    document.getElementById('date').value = formattedDate;
+  });
+
+  // Function to save form data to localStorage and print
+  function saveFormData(event) {
+    event.preventDefault(); // Prevent form submission
+    
+    // Get form data
+    const patientData = {
+      cardNumber: document.getElementById('cardNumber').value,
+      date: document.getElementById('date').value,
+      patientName: document.getElementById('patientName').value,
+      age: document.getElementById('age').value,
+      sex: document.getElementById('sex').value,
+      address: document.getElementById('address').value,
+      wereda: document.getElementById('wereda').value,
+      kebele: document.getElementById('kebele').value,
+      phoneNumber: document.getElementById('phoneNumber').value,
+      createdAt: new Date().toISOString() // For sorting in queue
+    };
+    
+    // Get existing patients or initialize empty array
+    let patients = [];
+    try {
+      const storedPatients = localStorage.getItem('patients');
+      if (storedPatients) {
+        patients = JSON.parse(storedPatients);
+      }
+    } catch (e) {
+      console.error('Error loading patient data:', e);
+    }
+    
+    // Add new patient to array
+    patients.push(patientData);
+    
+    // Save back to localStorage
+    localStorage.setItem('patients', JSON.stringify(patients));
+    
+    // Print the form
+    window.print();
+    
+    // Reset form after print
+    setTimeout(() => {
+      document.getElementById('patientForm').reset();
+      // Set today's date again
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0];
+      document.getElementById('date').value = formattedDate;
+      
+      // Ask if user wants to view the queue
+      if (confirm('Patient added to queue. Do you want to view the patient queue?')) {
+        window.location.href = 'queue.html';
+      }
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>
