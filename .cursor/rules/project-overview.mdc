@@ -1,0 +1,20 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Clinic Waitlist Management Project Overview
+
+This project is a simple clinic waitlist management system designed for real-time queue updates across three roles:
+
+- **Receptionist:** Creates a patient entry on their desktop, which instantly updates the queue for both the doctor and the public display.
+- **Doctor:** Sees the real-time queue on their desktop. When finished with a patient, clicks 'remove' to update the queue for all parties.
+- **Queue Display (Big Screen):** Shows only patient names and their place in the queue for waiting patients in the clinic.
+
+**Key Behaviors:**
+- When a patient is created, their info is sent simultaneously to the doctor's queue and the public queue display.
+- When a patient is removed by the doctor, the queue updates in real time for both the doctor and the public display, popping the next patient to the top.
+
+**Guiding Principle:**
+- The app prioritizes core functionality and real-time updates with the simplest possible implementation. UI and database complexity are minimized—if the core workflow works, the solution is sufficient.
+
