@@ -220,7 +220,14 @@
                 let patients = loadPatients();
                 patients.splice(index, 1);
                 localStorage.setItem('patients', JSON.stringify(patients));
+                
+                // Update display immediately
                 displayPatients();
+                
+                // Broadcast the update via WebSocket
+                if (typeof broadcastQueueUpdate === 'function') {
+                    broadcastQueueUpdate();
+                }
             }
         }
 
@@ -240,6 +247,11 @@
         // Initialize the display when the page loads
         window.onload = function() {
             displayPatients();
+            
+            // Ensure WebSocket is connected
+            if (typeof connectWebSocket === 'function') {
+                connectWebSocket();
+            }
         };
     </script>
 </body>
