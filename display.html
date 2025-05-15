@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinic Queue Display</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #4CAF50;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      font-size: 2.2em;
+    }
+    .queue-list {
+      margin-top: 30px;
+      width: 90vw;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 30px 0 20px 0;
+    }
+    .queue-item {
+      font-size: 1.5em;
+      padding: 18px 0;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: center;
+    }
+    .queue-item:last-child {
+      border-bottom: none;
+    }
+    .empty-message {
+      text-align: center;
+      color: #888;
+      font-size: 1.2em;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Patient Queue</h1>
+  <div class="queue-list" id="queueList">
+    <!-- Patient names will be inserted here -->
+  </div>
+  <div class="empty-message" id="emptyMessage" style="display:none;">
+    No patients in the queue.
+  </div>
+  <script src="client.js"></script>
+  <script>
+    // This will be filled by client.js via WebSocket updates
+    function renderQueue(patients) {
+      const queueList = document.getElementById('queueList');
+      const emptyMessage = document.getElementById('emptyMessage');
+      queueList.innerHTML = '';
+      if (!patients || patients.length === 0) {
+        emptyMessage.style.display = 'block';
+        return;
+      }
+      emptyMessage.style.display = 'none';
+      patients.forEach((patient, idx) => {
+        const div = document.createElement('div');
+        div.className = 'queue-item';
+        div.textContent = `${idx + 1}. ${patient.patientName || '-'}`;
+        queueList.appendChild(div);
+      });
+    }
+    // Initial render from localStorage (for first load)
+    let patients = [];
+    try {
+      const stored = localStorage.getItem('patients');
+      if (stored) patients = JSON.parse(stored);
+    } catch {}
+    renderQueue(patients);
+    // client.js will call window.renderQueue when updates arrive
+    window.renderQueue = renderQueue;
+  </script>
+</body>
+</html> 
