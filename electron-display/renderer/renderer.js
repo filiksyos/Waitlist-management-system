@@ -3,7 +3,7 @@ const WebSocket = require('ws');
 class QueueDisplay {
   constructor() {
     this.ws = null;
-    this.serverUrl = 'ws://192.186.43.246:8080';
+    this.serverUrl = 'ws://localhost:8080';
     this.patients = [];
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
