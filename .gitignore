@@ -27,4 +27,11 @@ Thumbs.db
 /coverage/
 
 # Misc
-*.log 
+*.log
+
+# Electron app (electron-display) specific ignores
+/electron-display/node_modules/
+/electron-display/dist/
+/electron-display/build/
+/electron-display/coverage/
+/electron-display/*.log 
