@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Queue</title>
+    <title>Doctor Interface - Mebrej Clinic</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,6 +17,16 @@
             color: #4CAF50;
         }
         
+        .role-badge {
+            background: #4682B4;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
         .queue-container {
             margin-top: 20px;
         }
@@ -25,6 +35,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         th, td {
@@ -34,7 +45,7 @@
         }
         
         th {
-            background-color: #4CAF50;
+            background-color: #4682B4;
             color: white;
         }
         
@@ -43,7 +54,7 @@
         }
         
         tr:hover {
-            background-color: #e6ffe6;
+            background-color: #e6f3ff;
         }
         
         .empty-message {
@@ -61,33 +72,16 @@
         
         button {
             padding: 10px 15px;
-            background-color: #4CAF50;
+            background-color: #4682B4;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
         
         button:hover {
-            background-color: #3e8e41;
-        }
-        
-        .add-new {
-            text-align: center;
-            margin-top: 30px;
-        }
-        
-        .add-new a {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        
-        .add-new a:hover {
-            background-color: #3e8e41;
+            background-color: #3a6d99;
         }
         
         .address-cell {
@@ -96,7 +90,8 @@
     </style>
 </head>
 <body>
-    <h1>መብረጅ ስፔሻሊቲ የቆዳ ክሊኒክ - Patient Queue</h1>
+    <div class="role-badge">👨‍⚕️ Doctor Interface</div>
+    <h1>Doctor Interface - Patient Queue</h1>
     
     <div class="actions">
         <button onclick="clearAllPatients()">Clear All</button>
@@ -124,10 +119,6 @@
         <div id="emptyMessage" class="empty-message" style="display: none;">
             <p>No patients in the queue. Add your first patient to get started.</p>
         </div>
-    </div>
-    
-    <div class="add-new">
-        <a href="4-.html">Add New Patient</a>
     </div>
 
     <script src="client.js"></script>

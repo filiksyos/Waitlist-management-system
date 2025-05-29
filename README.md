@@ -4,9 +4,9 @@
 A simple real-time clinic waitlist system for Receptionist, Doctor, and Public Display roles. Real-time updates are achieved via a local WebSocket server. No internet required—just a local network (WiFi or Ethernet).
 
 ## Features
-- Receptionist: Add patients (4-.html)
-- Doctor: View and remove patients (queue.html)
-- Public Display: Shows only patient names and queue position (display.html)
+- Receptionist: Add patients (Receptionist.html)
+- Doctor: View and remove patients (Doctor.html)
+- Public Display: Shows only patient names and queue position (Display.html)
 - Real-time updates across all roles
 - Minimal setup, no database required
 
@@ -35,9 +35,9 @@ The server will start on port 8080 by default.
 - Look for something like `192.168.x.x`
 
 ### 5. Open the App on Each Device
-- Receptionist: Open `http://<server-ip>:8080/4-.html`
-- Doctor: Open `http://<server-ip>:8080/queue.html`
-- Public Display: Open `http://<server-ip>:8080/display.html`
+- Receptionist: Open `http://<server-ip>:8080/Receptionist.html`
+- Doctor: Open `http://<server-ip>:8080/Doctor.html`
+- Public Display: Open `http://<server-ip>:8080/Display.html`
 
 (Replace `<server-ip>` with your server's local IP address)
 
@@ -64,3 +64,20 @@ The server will start on port 8080 by default.
 
 ## License
 MIT 
+
+## File Structure
+
+Each role has its dedicated interface:
+- Receptionist: Add patients (Receptionist.html)
+- Doctor: View and remove patients (Doctor.html)
+- Public Display: Shows only patient names and queue position (Display.html)
+
+## Quick Start
+
+1. Start the server: `node server.js` or `start-server.bat`
+2. Open the appropriate interface for each role:
+   - Receptionist: Open `http://<server-ip>:8080/Receptionist.html`
+   - Doctor: Open `http://<server-ip>:8080/Doctor.html`
+   - Public Display: Open `http://<server-ip>:8080/Display.html`
+
+(Replace `<server-ip>` with your server's local IP address) 

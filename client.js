@@ -52,24 +52,24 @@ function broadcastQueueUpdate() {
 
 // Patch add/remove/clear actions to broadcast updates
 (function patchQueueActions() {
-  // For add (4-.html)
-  if (window.saveFormData) {
-    const origSave = window.saveFormData;
+  // For add (Receptionist.html)
+  if (typeof saveFormData === 'function') {
+    const origSave = saveFormData;
     window.saveFormData = function(event) {
       origSave.call(this, event);
       setTimeout(broadcastQueueUpdate, 500); // after localStorage update
     };
   }
-  // For remove/clear (queue.html)
-  if (window.removePatient) {
-    const origRemove = window.removePatient;
+  // For remove/clear (Doctor.html)
+  if (typeof removePatient === 'function' || typeof clearAllPatients === 'function') {
+    const origRemove = removePatient || clearAllPatients;
     window.removePatient = function(index) {
       origRemove.call(this, index);
       setTimeout(broadcastQueueUpdate, 500);
     };
   }
-  if (window.clearAllPatients) {
-    const origClear = window.clearAllPatients;
+  if (typeof clearAllPatients === 'function') {
+    const origClear = clearAllPatients;
     window.clearAllPatients = function() {
       origClear.call(this);
       setTimeout(broadcastQueueUpdate, 500);

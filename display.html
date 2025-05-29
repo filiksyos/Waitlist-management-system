@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clinic Queue Display</title>
+  <title>Queue Display - Mebrej Clinic</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%);
       margin: 0;
       padding: 0;
       display: flex;
@@ -16,11 +16,25 @@
       justify-content: flex-start;
       min-height: 100vh;
     }
+    
+    .display-badge {
+      background: #6C757D;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 20px 0 10px 0;
+      font-weight: bold;
+      font-size: 1.1em;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
     h1 {
-      color: #4CAF50;
-      margin-top: 30px;
+      color: #495057;
+      margin-top: 10px;
       margin-bottom: 10px;
       font-size: 2.2em;
+      font-weight: 600;
     }
     .queue-list {
       margin-top: 30px;
@@ -28,7 +42,7 @@
       max-width: 600px;
       background: #fff;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       padding: 30px 0 20px 0;
     }
     .queue-item {
@@ -36,6 +50,8 @@
       padding: 18px 0;
       border-bottom: 1px solid #e0e0e0;
       text-align: center;
+      font-weight: 500;
+      color: #495057;
     }
     .queue-item:last-child {
       border-bottom: none;
@@ -45,10 +61,12 @@
       color: #888;
       font-size: 1.2em;
       margin-top: 40px;
+      font-weight: 400;
     }
   </style>
 </head>
 <body>
+  <div class="display-badge">📺 Public Display</div>
   <h1>Patient Queue</h1>
   <div class="queue-list" id="queueList">
     <!-- Patient names will be inserted here -->

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mebrej Speciality Dermatology Clinic</title>
+  <title>Receptionist Interface - Mebrej Speciality Dermatology Clinic</title>
 <style>
   form {
     font-family: Arial, sans-serif;
@@ -112,9 +112,6 @@ td:first-child {
 </style>
 </head>
 <body>
-<div class="nav-links">
-  <a href="queue.html">View Patient Queue</a>
-</div>
 
 <form id="patientForm" onsubmit="saveFormData(event)">
  <h3>መብረጅ ስፔሻሊቲ የቆዳ ክሊኒክ</br>
@@ -233,9 +230,7 @@ td:first-child {
       document.getElementById('date').value = formattedDate;
       
       // Ask if user wants to view the queue
-      if (confirm('Patient added to queue. Do you want to view the patient queue?')) {
-        window.location.href = 'queue.html';
-      }
+      alert('Patient successfully added to queue.');
     }, 1000);
   }
 </script>
