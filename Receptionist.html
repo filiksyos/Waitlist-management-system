@@ -218,21 +218,46 @@ td:first-child {
     // Save back to localStorage
     localStorage.setItem('patients', JSON.stringify(patients));
     
-    // Print the form
-    window.print();
+    console.log('Patient added to queue:', patientData);
     
-    // Reset form after print
-    setTimeout(() => {
-      document.getElementById('patientForm').reset();
-      // Set today's date again
-      const today = new Date();
-      const formattedDate = today.toISOString().split('T')[0];
-      document.getElementById('date').value = formattedDate;
+    // Immediately broadcast WebSocket update BEFORE printing
+    if (window.broadcastQueueUpdate) {
+      // Try to broadcast immediately
+      window.broadcastQueueUpdate();
+      console.log('WebSocket update sent immediately');
       
-      // Ask if user wants to view the queue
-      alert('Patient successfully added to queue.');
-    }, 1000);
+      // Also try again after a short delay in case connection wasn't ready
+      setTimeout(() => {
+        if (window.broadcastQueueUpdate) {
+          window.broadcastQueueUpdate();
+          console.log('WebSocket update retry sent');
+        }
+      }, 50);
+    } else {
+      console.warn('broadcastQueueUpdate function not available');
+    }
+    
+    // Small delay to ensure WebSocket message is sent before print dialog
+    setTimeout(() => {
+      // Print the form
+      window.print();
+      
+      // Reset form after print
+      setTimeout(() => {
+        document.getElementById('patientForm').reset();
+        // Set today's date again
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        document.getElementById('date').value = formattedDate;
+        
+        // Ask if user wants to view the queue
+        alert('Patient successfully added to queue.');
+      }, 1000);
+    }, 200); // 200ms delay to ensure WebSocket is sent
   }
+
+  // Expose function to window for WebSocket patching
+  window.saveFormData = saveFormData;
 </script>
 
 </body>

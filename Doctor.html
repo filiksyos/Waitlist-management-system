@@ -209,16 +209,14 @@
         function removePatient(index) {
             if (confirm('Are you sure you want to remove this patient?')) {
                 let patients = loadPatients();
-                patients.splice(index, 1);
-                localStorage.setItem('patients', JSON.stringify(patients));
+                const sortedPatients = sortPatientsByDate(patients);
+                sortedPatients.splice(index, 1);
+                localStorage.setItem('patients', JSON.stringify(sortedPatients));
+                
+                console.log('Patient removed from queue');
                 
                 // Update display immediately
                 displayPatients();
-                
-                // Broadcast the update via WebSocket
-                if (typeof broadcastQueueUpdate === 'function') {
-                    broadcastQueueUpdate();
-                }
             }
         }
 
@@ -226,6 +224,7 @@
         function clearAllPatients() {
             if (confirm('Are you sure you want to clear all patients? This cannot be undone.')) {
                 localStorage.removeItem('patients');
+                console.log('All patients cleared from queue');
                 displayPatients();
             }
         }
@@ -234,6 +233,10 @@
         function refreshQueue() {
             displayPatients();
         }
+
+        // Expose functions to window for WebSocket patching
+        window.removePatient = removePatient;
+        window.clearAllPatients = clearAllPatients;
 
         // Initialize the display when the page loads
         window.onload = function() {

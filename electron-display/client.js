@@ -83,8 +83,19 @@ function broadcastQueueUpdate() {
 
 // Enhanced function patching that works with timing
 function patchFunctions() {
-  // Note: saveFormData now handles broadcasting directly in Receptionist.html
-  
+  // Patch saveFormData for Receptionist
+  if (typeof window.saveFormData === 'function') {
+    const originalSaveFormData = window.saveFormData;
+    window.saveFormData = function(event) {
+      originalSaveFormData.call(this, event);
+      // Immediate broadcast after localStorage update
+      setTimeout(() => {
+        broadcastQueueUpdate();
+      }, 100);
+    };
+    console.log('Patched saveFormData for broadcasting');
+  }
+
   // Patch removePatient for Doctor
   if (typeof window.removePatient === 'function') {
     const originalRemovePatient = window.removePatient;
