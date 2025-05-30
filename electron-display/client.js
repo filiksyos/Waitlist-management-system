@@ -1,6 +1,21 @@
 // WebSocket client logic for all roles
-// Set the WebSocket server address here (update to your server's local IP if needed)
-const WS_SERVER_URL = 'ws://localhost:8080'; // Change to ws://<server-ip>:8080 on deployment
+// Dynamically determine WebSocket server URL based on current page host
+let WS_SERVER_URL;
+
+if (window.location.protocol === 'file:') {
+  // Handle Electron app or local file access
+  WS_SERVER_URL = 'ws://localhost:8080';
+  console.log('File protocol detected, using localhost WebSocket');
+} else {
+  // Use same host as the web page for network access
+  const currentHost = window.location.host;
+  WS_SERVER_URL = `ws://${currentHost}`;
+}
+
+console.log('WebSocket connecting to:', WS_SERVER_URL);
+
+// Expose WebSocket URL globally for debugging
+window.WS_SERVER_URL = WS_SERVER_URL;
 
 let ws;
 let reconnectTimeout = 2000;

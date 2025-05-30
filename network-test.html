@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Test - WebSocket URL Detection</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 800px; }
+        .info { padding: 15px; margin: 10px 0; border-radius: 5px; background-color: #f8f9fa; border: 1px solid #dee2e6; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .code { font-family: monospace; background-color: #f1f3f4; padding: 3px 6px; border-radius: 3px; }
+        button { padding: 10px 15px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Network Test - WebSocket URL Detection</h1>
+    
+    <div class="info">
+        <h3>Current Page Information:</h3>
+        <p><strong>Protocol:</strong> <span class="code" id="protocol"></span></p>
+        <p><strong>Host:</strong> <span class="code" id="host"></span></p>
+        <p><strong>Full URL:</strong> <span class="code" id="fullUrl"></span></p>
+    </div>
+    
+    <div class="info">
+        <h3>WebSocket Configuration:</h3>
+        <p><strong>WebSocket URL:</strong> <span class="code" id="wsUrl"></span></p>
+        <p><strong>Connection Status:</strong> <span id="wsStatus">Not connected</span></p>
+    </div>
+    
+    <div>
+        <button onclick="testConnection()">Test WebSocket Connection</button>
+        <button onclick="addTestPatient()">Add Test Patient</button>
+        <button onclick="clearPatients()">Clear Patients</button>
+    </div>
+    
+    <div class="info">
+        <h3>Test Log:</h3>
+        <pre id="log" style="background-color: #000; color: #0f0; padding: 10px; height: 200px; overflow-y: auto;"></pre>
+    </div>
+
+    <script src="client.js"></script>
+    <script>
+        // Display page information
+        document.getElementById('protocol').textContent = window.location.protocol;
+        document.getElementById('host').textContent = window.location.host;
+        document.getElementById('fullUrl').textContent = window.location.href;
+        
+        // This will be set by client.js
+        setTimeout(() => {
+            if (typeof WS_SERVER_URL !== 'undefined') {
+                document.getElementById('wsUrl').textContent = WS_SERVER_URL;
+            } else {
+                document.getElementById('wsUrl').textContent = 'Not available';
+            }
+        }, 100);
+        
+        let logElement = document.getElementById('log');
+        let patientCounter = 1;
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function testConnection() {
+            log('Testing WebSocket connection...');
+            
+            if (window.ws) {
+                log(`WebSocket state: ${window.ws.readyState}`);
+                log(`WebSocket URL: ${window.ws.url || 'Unknown'}`);
+                
+                switch(window.ws.readyState) {
+                    case WebSocket.CONNECTING:
+                        log('Status: Connecting...');
+                        document.getElementById('wsStatus').textContent = 'Connecting...';
+                        break;
+                    case WebSocket.OPEN:
+                        log('Status: Connected ✓');
+                        document.getElementById('wsStatus').textContent = 'Connected ✓';
+                        break;
+                    case WebSocket.CLOSING:
+                        log('Status: Closing...');
+                        document.getElementById('wsStatus').textContent = 'Closing...';
+                        break;
+                    case WebSocket.CLOSED:
+                        log('Status: Closed ✗');
+                        document.getElementById('wsStatus').textContent = 'Closed ✗';
+                        break;
+                }
+            } else {
+                log('No WebSocket instance found');
+                document.getElementById('wsStatus').textContent = 'No WebSocket instance';
+            }
+        }
+        
+        function addTestPatient() {
+            const testPatient = {
+                cardNumber: `NET${patientCounter.toString().padStart(3, '0')}`,
+                date: new Date().toISOString().split('T')[0],
+                patientName: `Network Test Patient ${patientCounter}`,
+                age: '30',
+                sex: 'F',
+                address: 'Test Address',
+                wereda: 'Test Wereda',
+                kebele: 'Test Kebele',
+                phoneNumber: '0923456789',
+                createdAt: new Date().toISOString()
+            };
+
+            let patients = [];
+            try {
+                const stored = localStorage.getItem('patients');
+                if (stored) patients = JSON.parse(stored);
+            } catch (e) {
+                log('Error loading patients: ' + e.message);
+            }
+
+            patients.push(testPatient);
+            localStorage.setItem('patients', JSON.stringify(patients));
+            
+            log(`Test patient added: ${testPatient.patientName}`);
+            patientCounter++;
+            
+            // Broadcast the update
+            if (window.broadcastQueueUpdate) {
+                window.broadcastQueueUpdate();
+                log('WebSocket update broadcasted');
+            } else {
+                log('broadcastQueueUpdate function not available');
+            }
+        }
+        
+        function clearPatients() {
+            localStorage.removeItem('patients');
+            log('All patients cleared');
+            
+            if (window.broadcastQueueUpdate) {
+                window.broadcastQueueUpdate();
+                log('Clear update broadcasted');
+            }
+        }
+        
+        // Set up render function for WebSocket updates
+        window.renderQueue = function(patients) {
+            log(`WebSocket update received: ${patients ? patients.length : 0} patients`);
+        };
+        
+        // Auto-test connection every 5 seconds
+        setInterval(testConnection, 5000);
+        
+        // Initial test
+        setTimeout(testConnection, 1000);
+        
+        log('Network test page loaded');
+    </script>
+</body>
+</html> 
