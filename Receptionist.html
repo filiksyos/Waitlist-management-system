@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receptionist Interface - Mebrej Speciality Dermatology Clinic</title>
+<style>
+  form {
+    font-family: Arial, sans-serif;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 13px;
+  
+  
+  }
+  
+  h3 {
+    text-align: center;
+    margin-bottom: 2px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 3px;
+  }
+  
+  input[type="text"],
+  input[type="date"],
+  textarea {
+    width: 100%;
+    padding: 1px;
+    margin-bottom: 2px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  input[type="submit"] {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  input[type="submit"]:hover {
+    background-color: #3e8e41;
+  }
+  
+ .subfield {
+   display:inline-block; 
+   width:30%;
+   margin-right:10px; 
+ }
+ 
+ .subfield input{
+   width:80%; 
+   .patient-type {
+    margin-bottom: 10px;
+  }
+  
+}
+  
+  
+table {
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid black;
+  padding: 5px;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+th {
+  background-color: #4CAF50;
+  color: white;
+}
+
+td:first-child {
+  width: 30%;
+}
+
+.nav-links {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.nav-links a {
+  display: inline-block;
+  padding: 8px 15px;
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  margin: 0 10px;
+}
+
+.nav-links a:hover {
+  background-color: #3e8e41;
+}
+ 
+</style>
+</head>
+<body>
+
+<form id="patientForm" onsubmit="saveFormData(event)">
+ <h3>መብረጅ ስፔሻሊቲ የቆዳ ክሊኒክ</br>
+  Mebrej Speciality Dermatology Clinic</br>
+ 
+  0946635969/0583209990</br>
+  የህክምና መስጫ ካርድ</br>
+   ባህር ዳር-Bahir Dar</br>
+</h3> &nbsp &nbsp &nbsp
+  &nbsp &nbsp &nbsp&nbsp &nbsp &nbsp&nbsp &nbsp &nbsp&nbsp &nbsp &nbsp
+  &nbsp &nbsp &nbsp&nbsp &nbsp &nbsp&nbsp &nbsp &nbsp&nbsp &nbsp &nbsp
+  &nbsp &nbsp &nbsp&nbsp &nbsp &nbsp&nbsp &nbsp &nbsp&nbsp &nbsp &nbsp
+  &nbsp &nbsp &nbsp &nbsp &nbsp 
+
+
+
+
+<div class="subfield">
+   <label for="cardNumber">Card Number</label>
+   <input type="text" id="cardNumber" name="cardNumber"><br>
+
+<label for="date">Date:</label>
+   <input type="text" id="date" name="date">
+  </div>
+
+
+
+
+  <label for="patientName">ስም:</label>
+  <input type="text" id="patientName" name="patientName">
+
+<div class="subfield">
+  <label for="age">ዕድሜ:</label>
+  <input type="text" id="age" name="age">
+</div>
+<div class="subfield">
+  <label for="sex">ጾታ:</label>
+  <input type="text" id="sex" name="sex">
+</div><br>
+ <div class="subfield">
+  <label for="address">አድራሻ:</label>
+   <input type="text" id="address" name="address">
+ </div> 
+<div class="subfield">
+   <label for="wereda">ወረዳ:</label>
+   <input type="text" id="wereda" name="wereda">
+ </div>
+ <div class="subfield">
+   <label for="kebele">ቀበሌ:</label>
+   <input type="text" id="kebele" name="kebele">
+ </div>
+ <div class="subfield">
+   <label for="phoneNumber">ስልክ ቁጥር:</label>
+   <input type="text" id="phoneNumber" name="phoneNumber"><br>
+ </div><br> <br>
+   
+
+ <input type="submit" value="Submit and Print">
+  
+
+</form>
+
+<script src="client.js"></script>
+<script>
+  // Set today's date by default
+  document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    document.getElementById('date').value = formattedDate;
+  });
+
+  // Function to save form data to localStorage and print
+  function saveFormData(event) {
+    event.preventDefault(); // Prevent form submission
+    
+    // Get form data
+    const patientData = {
+      cardNumber: document.getElementById('cardNumber').value,
+      date: document.getElementById('date').value,
+      patientName: document.getElementById('patientName').value,
+      age: document.getElementById('age').value,
+      sex: document.getElementById('sex').value,
+      address: document.getElementById('address').value,
+      wereda: document.getElementById('wereda').value,
+      kebele: document.getElementById('kebele').value,
+      phoneNumber: document.getElementById('phoneNumber').value,
+      createdAt: new Date().toISOString() // For sorting in queue
+    };
+    
+    // Get existing patients or initialize empty array
+    let patients = [];
+    try {
+      const storedPatients = localStorage.getItem('patients');
+      if (storedPatients) {
+        patients = JSON.parse(storedPatients);
+      }
+    } catch (e) {
+      console.error('Error loading patient data:', e);
+    }
+    
+    // Add new patient to array
+    patients.push(patientData);
+    
+    // Save back to localStorage
+    localStorage.setItem('patients', JSON.stringify(patients));
+    
+    console.log('Patient added to queue:', patientData);
+    
+    // Immediately broadcast WebSocket update BEFORE printing
+    if (window.broadcastQueueUpdate) {
+      // Try to broadcast immediately
+      window.broadcastQueueUpdate();
+      console.log('WebSocket update sent immediately');
+      
+      // Also try again after a short delay in case connection wasn't ready
+      setTimeout(() => {
+        if (window.broadcastQueueUpdate) {
+          window.broadcastQueueUpdate();
+          console.log('WebSocket update retry sent');
+        }
+      }, 50);
+    } else {
+      console.warn('broadcastQueueUpdate function not available');
+    }
+    
+    // Small delay to ensure WebSocket message is sent before print dialog
+    setTimeout(() => {
+      // Print the form
+      window.print();
+      
+      // Reset form after print
+      setTimeout(() => {
+        document.getElementById('patientForm').reset();
+        // Set today's date again
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        document.getElementById('date').value = formattedDate;
+      }, 1000);
+    }, 200); // 200ms delay to ensure WebSocket is sent
+  }
+
+  // Expose function to window for WebSocket patching
+  window.saveFormData = saveFormData;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "clinic-queue-display",
+  "version": "1.0.0",
+  "description": "Electron app to display clinic queue",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "dependencies": {
+    "electron": "^27.0.0",
+    "ws": "^8.13.0",
+    "auto-launch": "^5.0.6"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0"
+  }
+} 

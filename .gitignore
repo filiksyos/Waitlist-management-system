@@ -1,0 +1,37 @@
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+
+# Cursor plugin
+.cursor/
+
+# Build output
+/dist/
+/build/
+/coverage/
+
+# Misc
+*.log
+
+# Electron app (electron-display) specific ignores
+/electron-display/node_modules/
+/electron-display/dist/
+/electron-display/build/
+/electron-display/coverage/
+/electron-display/*.log 

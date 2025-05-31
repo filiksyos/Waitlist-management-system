@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Queue Display - Mebrej Clinic</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="display-badge">📺 Clinic Display</div>
+  <h1>Patient Queue</h1>
+  
+  <div class="connection-status" id="connectionStatus">
+    <span class="status-indicator" id="statusIndicator">●</span>
+    <span id="statusText">Connecting...</span>
+  </div>
+  
+  <div class="queue-list" id="queueList">
+    <!-- Patient names will be inserted here -->
+  </div>
+  
+  <div class="empty-message" id="emptyMessage" style="display:none;">
+    No patients in the queue.
+  </div>
+  
+  <script src="../client.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html> 

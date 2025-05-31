@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Interface - Mebrej Clinic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        
+        .role-badge {
+            background: #4682B4;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .queue-container {
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #4682B4;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        tr:hover {
+            background-color: #e6f3ff;
+        }
+        
+        .empty-message {
+            text-align: center;
+            margin-top: 50px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #4682B4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #3a6d99;
+        }
+        
+        .address-cell {
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="role-badge">👨‍⚕️ Doctor Interface</div>
+    <h1>Doctor Interface - Patient Queue</h1>
+    
+    <div class="actions">
+        <button onclick="clearAllPatients()">Clear All</button>
+        <button onclick="refreshQueue()">Refresh</button>
+    </div>
+    
+    <div class="queue-container">
+        <table id="patientTable">
+            <thead>
+                <tr>
+                    <th>Card Number</th>
+                    <th>Date</th>
+                    <th>Patient Name</th>
+                    <th>Age</th>
+                    <th>Sex</th>
+                    <th>Address</th>
+                    <th>Phone Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="queueBody">
+                <!-- Patient data will be inserted here -->
+            </tbody>
+        </table>
+        <div id="emptyMessage" class="empty-message" style="display: none;">
+            <p>No patients in the queue. Add your first patient to get started.</p>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+    <script>
+        // Function to load patient data from localStorage
+        function loadPatients() {
+            let patients = [];
+            try {
+                const storedPatients = localStorage.getItem('patients');
+                if (storedPatients) {
+                    patients = JSON.parse(storedPatients);
+                }
+            } catch (e) {
+                console.error('Error loading patient data:', e);
+            }
+            return patients;
+        }
+
+        // Function to sort patients by date of creation (oldest first - FIFO)
+        function sortPatientsByDate(patients) {
+            return patients.sort((a, b) => {
+                // First try to sort by the createdAt timestamp
+                if (a.createdAt && b.createdAt) {
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                }
+                
+                // Fallback to the date field
+                const dateA = a.date ? new Date(a.date) : new Date(0);
+                const dateB = b.date ? new Date(b.date) : new Date(0);
+                return dateA - dateB; // Ascending order (oldest first)
+            });
+        }
+
+        // Function to format the address from multiple fields
+        function formatAddress(patient) {
+            const addressParts = [];
+            
+            if (patient.address) addressParts.push(patient.address);
+            if (patient.wereda) addressParts.push(patient.wereda);
+            if (patient.kebele) addressParts.push(patient.kebele);
+            
+            return addressParts.join(", ") || "-";
+        }
+
+        // Function to display patients in the table
+        function displayPatients() {
+            const patients = loadPatients();
+            const sortedPatients = sortPatientsByDate(patients);
+            const tableBody = document.getElementById('queueBody');
+            const emptyMessage = document.getElementById('emptyMessage');
+            
+            // Clear current table
+            tableBody.innerHTML = '';
+            
+            // Show empty message if no patients
+            if (sortedPatients.length === 0) {
+                emptyMessage.style.display = 'block';
+                document.getElementById('patientTable').style.display = 'none';
+                return;
+            }
+            
+            // Hide empty message and show table
+            emptyMessage.style.display = 'none';
+            document.getElementById('patientTable').style.display = 'table';
+            
+            // Add patients to table
+            sortedPatients.forEach((patient, index) => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${patient.cardNumber || '-'}</td>
+                    <td>${patient.date || '-'}</td>
+                    <td>${patient.patientName || '-'}</td>
+                    <td>${patient.age || '-'}</td>
+                    <td>${patient.sex || '-'}</td>
+                    <td class="address-cell">${formatAddress(patient)}</td>
+                    <td>${patient.phoneNumber || '-'}</td>
+                    <td>
+                        <button onclick="removePatient(${index})">Remove</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Function to remove a patient
+        function removePatient(index) {
+            if (confirm('Are you sure you want to remove this patient?')) {
+                let patients = loadPatients();
+                const sortedPatients = sortPatientsByDate(patients);
+                sortedPatients.splice(index, 1);
+                localStorage.setItem('patients', JSON.stringify(sortedPatients));
+                
+                console.log('Patient removed from queue');
+                
+                // Update display immediately
+                displayPatients();
+            }
+        }
+
+        // Function to clear all patients
+        function clearAllPatients() {
+            if (confirm('Are you sure you want to clear all patients? This cannot be undone.')) {
+                localStorage.removeItem('patients');
+                console.log('All patients cleared from queue');
+                displayPatients();
+            }
+        }
+
+        // Function to refresh the queue
+        function refreshQueue() {
+            displayPatients();
+        }
+
+        // Expose functions to window for WebSocket patching
+        window.removePatient = removePatient;
+        window.clearAllPatients = clearAllPatients;
+
+        // Initialize the display when the page loads
+        window.onload = function() {
+            displayPatients();
+            
+            // Ensure WebSocket is connected
+            if (typeof connectWebSocket === 'function') {
+                connectWebSocket();
+            }
+        };
+    </script>
+</body>
+</html> 

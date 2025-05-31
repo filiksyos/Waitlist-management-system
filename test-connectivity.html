@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Connectivity Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .disconnected { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        button { padding: 8px 15px; margin: 5px; }
+        #patientList { border: 1px solid #ccc; padding: 10px; min-height: 100px; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Connectivity Test</h1>
+    
+    <div class="test-section">
+        <h3>Connection Status</h3>
+        <div id="connectionStatus" class="status disconnected">Disconnected</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Patient Addition</h3>
+        <button onclick="addTestPatient()">Add Test Patient</button>
+        <button onclick="clearAllPatients()">Clear All Patients</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Current Patient Queue</h3>
+        <div id="patientList">No patients</div>
+    </div>
+
+    <script src="client.js"></script>
+    <script>
+        let testPatientCounter = 1;
+
+        function addTestPatient() {
+            const testPatient = {
+                cardNumber: `TEST${testPatientCounter.toString().padStart(3, '0')}`,
+                date: new Date().toISOString().split('T')[0],
+                patientName: `Test Patient ${testPatientCounter}`,
+                age: '25',
+                sex: 'M',
+                address: 'Test Address',
+                wereda: 'Test Wereda',
+                kebele: 'Test Kebele',
+                phoneNumber: '0912345678',
+                createdAt: new Date().toISOString()
+            };
+
+            let patients = [];
+            try {
+                const stored = localStorage.getItem('patients');
+                if (stored) patients = JSON.parse(stored);
+            } catch (e) {
+                console.error('Error loading patients:', e);
+            }
+
+            patients.push(testPatient);
+            localStorage.setItem('patients', JSON.stringify(patients));
+            
+            console.log('Test patient added:', testPatient);
+            testPatientCounter++;
+            
+            updatePatientDisplay();
+            
+            // Broadcast the update
+            if (window.broadcastQueueUpdate) {
+                setTimeout(() => {
+                    window.broadcastQueueUpdate();
+                }, 100);
+            }
+        }
+
+        function clearAllPatients() {
+            localStorage.removeItem('patients');
+            updatePatientDisplay();
+            
+            if (window.broadcastQueueUpdate) {
+                setTimeout(() => {
+                    window.broadcastQueueUpdate();
+                }, 100);
+            }
+        }
+
+        function updatePatientDisplay() {
+            const patientList = document.getElementById('patientList');
+            let patients = [];
+            
+            try {
+                const stored = localStorage.getItem('patients');
+                if (stored) patients = JSON.parse(stored);
+            } catch (e) {
+                console.error('Error loading patients:', e);
+            }
+
+            if (patients.length === 0) {
+                patientList.innerHTML = 'No patients';
+                return;
+            }
+
+            const sorted = patients.sort((a, b) => {
+                if (a.createdAt && b.createdAt) {
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                }
+                return 0;
+            });
+
+            patientList.innerHTML = sorted.map((p, idx) => 
+                `${idx + 1}. ${p.patientName} (${p.cardNumber})`
+            ).join('<br>');
+        }
+
+        function updateConnectionStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+                statusDiv.textContent = 'Connected to WebSocket server';
+                statusDiv.className = 'status connected';
+            } else if (window.ws && window.ws.readyState === WebSocket.CONNECTING) {
+                statusDiv.textContent = 'Connecting to WebSocket server...';
+                statusDiv.className = 'status disconnected';
+            } else {
+                statusDiv.textContent = 'Disconnected from WebSocket server';
+                statusDiv.className = 'status disconnected';
+            }
+        }
+
+        // Set up render function for WebSocket updates
+        window.renderQueue = function(patients) {
+            console.log('WebSocket update received:', patients);
+            updatePatientDisplay();
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePatientDisplay();
+            
+            // Update connection status every second
+            setInterval(updateConnectionStatus, 1000);
+        });
+    </script>
+</body>
+</html> 
