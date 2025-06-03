@@ -22,6 +22,45 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.hdmi-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.hdmi-status.connected {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.hdmi-status.disconnected {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  animation: pulse-warning 2s infinite;
+}
+
+.hdmi-indicator {
+  font-size: 1.2em;
+  transition: transform 0.3s ease;
+}
+
+.hdmi-status.connected .hdmi-indicator {
+  transform: scale(1.1);
+}
+
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 h1 {
   color: #495057;
   margin-top: 10px;

@@ -1,12 +1,15 @@
+const { ipcRenderer } = require('electron');
 const WebSocket = require('ws');
 
 class QueueDisplay {
   constructor() {
     this.patients = [];
+    this.hdmiConnected = false;
     
     this.initializeElements();
     this.loadInitialData();
     this.setupWebSocketIntegration();
+    this.setupHDMIStatusHandling();
   }
 
   initializeElements() {
@@ -14,6 +17,62 @@ class QueueDisplay {
     this.emptyMessage = document.getElementById('emptyMessage');
     this.statusIndicator = document.getElementById('statusIndicator');
     this.statusText = document.getElementById('statusText');
+    
+    // Create HDMI status element
+    this.createHDMIStatusElement();
+  }
+
+  createHDMIStatusElement() {
+    const hdmiStatus = document.createElement('div');
+    hdmiStatus.className = 'hdmi-status';
+    hdmiStatus.id = 'hdmiStatus';
+    hdmiStatus.innerHTML = `
+      <span class="hdmi-indicator" id="hdmiIndicator">📺</span>
+      <span id="hdmiText">Checking HDMI...</span>
+    `;
+    
+    // Insert after the display badge
+    const displayBadge = document.querySelector('.display-badge');
+    displayBadge.parentNode.insertBefore(hdmiStatus, displayBadge.nextSibling);
+  }
+
+  setupHDMIStatusHandling() {
+    // Listen for display status from main process
+    ipcRenderer.on('display-status', (event, data) => {
+      this.hdmiConnected = data.hdmiConnected;
+      this.updateHDMIStatus();
+      console.log('Display status received:', data);
+    });
+
+    // Listen for HDMI connected
+    ipcRenderer.on('hdmi-connected', (event, data) => {
+      this.hdmiConnected = true;
+      this.updateHDMIStatus();
+      console.log('HDMI connected:', data);
+    });
+
+    // Listen for HDMI disconnected
+    ipcRenderer.on('hdmi-disconnected', (event, data) => {
+      this.hdmiConnected = false;
+      this.updateHDMIStatus();
+      console.log('HDMI disconnected');
+    });
+  }
+
+  updateHDMIStatus() {
+    const hdmiIndicator = document.getElementById('hdmiIndicator');
+    const hdmiText = document.getElementById('hdmiText');
+    const hdmiStatus = document.getElementById('hdmiStatus');
+    
+    if (this.hdmiConnected) {
+      hdmiStatus.className = 'hdmi-status connected';
+      hdmiIndicator.textContent = '📺';
+      hdmiText.textContent = 'HDMI Connected';
+    } else {
+      hdmiStatus.className = 'hdmi-status disconnected';
+      hdmiIndicator.textContent = '📺';
+      hdmiText.textContent = 'HDMI Not Connected - Please connect external display';
+    }
   }
 
   loadInitialData() {

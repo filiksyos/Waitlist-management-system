@@ -3,16 +3,47 @@
   "version": "1.0.0",
   "description": "Electron app to display clinic queue",
   "main": "main.js",
+  "author": "Mebrej Clinic",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "dist": "electron-builder --publish=never"
   },
   "dependencies": {
-    "electron": "^27.0.0",
-    "ws": "^8.13.0",
-    "auto-launch": "^5.0.6"
+    "ws": "^8.13.0"
   },
   "devDependencies": {
-    "electron": "^27.0.0"
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.mebrej.clinic-queue-display",
+    "productName": "Clinic Queue Display",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "files": [
+      "main.js",
+      "client.js",
+      "utils/**/*",
+      "renderer/**/*",
+      "package.json"
+    ]
   }
 } 
