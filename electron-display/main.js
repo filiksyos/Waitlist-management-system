@@ -1,13 +1,11 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 app.disableHardwareAcceleration();
 const path = require('path');
 const DisplayManager = require('./utils/display-manager');
-const AutoLaunchManager = require('./utils/auto-launch');
 
 // Global instances
 let mainWindow = null;
 let displayManager = null;
-let autoLaunchManager = null;
 const isDevelopment = process.argv.includes('--dev');
 
 function createWindow() {
@@ -24,6 +22,24 @@ function createWindow() {
   console.log('TV Display Available:', isTVAvailable);
   console.log('Window bounds:', tvBounds);
 
+  // If no HDMI/TV display detected, show dialog to user
+  if (!isTVAvailable && !isDevelopment) {
+    const result = dialog.showMessageBoxSync(null, {
+      type: 'warning',
+      title: 'HDMI Display Not Detected',
+      message: 'No HDMI display detected for the clinic queue display.',
+      detail: 'Please connect an HDMI cable to an external display/TV and restart the application.\n\nThe app will now run on your primary display for testing purposes.',
+      buttons: ['Continue Anyway', 'Exit'],
+      defaultId: 0,
+      cancelId: 1
+    });
+    
+    if (result === 1) {
+      app.quit();
+      return;
+    }
+  }
+
   // Create the browser window with kiosk mode settings
   mainWindow = new BrowserWindow({
     x: tvBounds.x,
@@ -36,8 +52,8 @@ function createWindow() {
     },
     show: false,
     // Kiosk mode settings
-    frame: !isDevelopment, // No frame in production
-    fullscreen: !isDevelopment, // Fullscreen in production
+    frame: isDevelopment, // Frame only in development
+    fullscreen: false, // Don't start fullscreen, set it after window is shown
     alwaysOnTop: !isDevelopment, // Always on top in production
     resizable: isDevelopment, // Not resizable in production
     movable: isDevelopment, // Not movable in production
@@ -45,7 +61,7 @@ function createWindow() {
     maximizable: isDevelopment, // Not maximizable in production
     closable: isDevelopment, // Not closable in production (prevents accidental closing)
     autoHideMenuBar: true, // Hide menu bar
-    kiosk: !isDevelopment // True kiosk mode in production
+    kiosk: false // Set kiosk mode after positioning
   });
 
   // Load the display page
@@ -53,16 +69,34 @@ function createWindow() {
 
   // Show window when ready
   mainWindow.once('ready-to-show', () => {
+    // First, position the window on the correct display
+    if (isTVAvailable) {
+      console.log(`Positioning window on TV at: x=${tvBounds.x}, y=${tvBounds.y}, width=${tvBounds.width}, height=${tvBounds.height}`);
+      mainWindow.setPosition(tvBounds.x, tvBounds.y);
+      mainWindow.setSize(tvBounds.width, tvBounds.height);
+    }
+    
+    // Show the window first
     mainWindow.show();
     
-    if (!isDevelopment) {
-      // In production, ensure window stays on TV display
-      mainWindow.setPosition(tvBounds.x, tvBounds.y);
-      mainWindow.setFullScreen(true);
-      mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    // Then apply fullscreen/kiosk mode in production
+    if (!isDevelopment && isTVAvailable) {
+      setTimeout(() => {
+        console.log('Applying production mode settings...');
+        mainWindow.setFullScreen(true);
+        mainWindow.setAlwaysOnTop(true, 'screen-saver');
+        mainWindow.setKiosk(true);
+      }, 100); // Small delay to ensure positioning is complete
     }
     
     console.log('Window displayed on TV:', isTVAvailable ? 'Yes' : 'No (using primary)');
+    console.log('Development mode:', isDevelopment);
+    
+    // Send display status to renderer
+    mainWindow.webContents.send('display-status', {
+      hdmiConnected: isTVAvailable,
+      displayInfo: displayInfo
+    });
   });
 
   // Open DevTools in development
@@ -87,6 +121,29 @@ function createWindow() {
       const newTVBounds = displayManager.getTVWindowBounds();
       mainWindow.setPosition(newTVBounds.x, newTVBounds.y);
       mainWindow.setSize(newTVBounds.width, newTVBounds.height);
+      mainWindow.setFullScreen(true);
+      
+      // Notify renderer about HDMI connection
+      mainWindow.webContents.send('hdmi-connected', newDisplayInfo);
+      
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'HDMI Connected',
+        message: 'HDMI display detected and activated!',
+        detail: 'The queue display is now showing on the external display.'
+      });
+    } else if (changeType === 'removed' && !newDisplayInfo.tv) {
+      // TV was disconnected
+      mainWindow.webContents.send('hdmi-disconnected');
+      
+      if (!isDevelopment) {
+        dialog.showMessageBox(mainWindow, {
+          type: 'warning',
+          title: 'HDMI Disconnected',
+          message: 'HDMI display has been disconnected.',
+          detail: 'Please reconnect the HDMI cable to the external display.'
+        });
+      }
     }
   });
 
@@ -109,16 +166,6 @@ function createWindow() {
 
 // App event handlers
 app.whenReady().then(async () => {
-  // Initialize auto-launch manager
-  autoLaunchManager = new AutoLaunchManager();
-  
-  // Setup auto-launch based on mode
-  await autoLaunchManager.setup();
-  
-  // Log auto-launch status
-  const autoLaunchStatus = await autoLaunchManager.getStatus();
-  console.log('Auto-launch status:', autoLaunchStatus);
-  
   // Create the main window
   createWindow();
 });
