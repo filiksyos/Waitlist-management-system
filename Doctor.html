@@ -90,8 +90,8 @@
     </style>
 </head>
 <body>
-    <div class="role-badge">👨‍⚕️ Doctor Interface</div>
-    <h1>Doctor Interface - Patient Queue</h1>
+    <div class="role-badge" id="roleBadge">👨‍⚕️ Doctor Interface</div>
+    <h1 id="pageTitle">Doctor Interface - Patient Queue</h1>
     
     <div class="actions">
         <button onclick="clearAllPatients()">Clear All</button>
@@ -123,6 +123,23 @@
 
     <script src="client.js"></script>
     <script>
+        // Get current doctor ID from URL parameters
+        function getCurrentDoctorId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const doctorId = urlParams.get('doctor');
+            return doctorId || 'doctor1'; // Default to doctor1 if no parameter
+        }
+
+        // Update page title and header based on doctor ID
+        function updatePageForDoctor() {
+            const doctorId = getCurrentDoctorId();
+            const doctorNumber = doctorId === 'doctor1' ? '1' : '2';
+            
+            document.getElementById('roleBadge').textContent = `👨‍⚕️ Doctor ${doctorNumber} Interface`;
+            document.getElementById('pageTitle').textContent = `Doctor ${doctorNumber} Interface - Patient Queue`;
+            document.title = `Doctor ${doctorNumber} Interface - Mebrej Clinic`;
+        }
+
         // Function to load patient data from localStorage
         function loadPatients() {
             let patients = [];
@@ -134,7 +151,10 @@
             } catch (e) {
                 console.error('Error loading patient data:', e);
             }
-            return patients;
+            
+            // Filter patients by current doctor
+            const currentDoctorId = getCurrentDoctorId();
+            return patients.filter(patient => patient.doctorId === currentDoctorId);
         }
 
         // Function to sort patients by date of creation (oldest first - FIFO)
@@ -208,10 +228,34 @@
         // Function to remove a patient
         function removePatient(index) {
             if (confirm('Are you sure you want to remove this patient?')) {
-                let patients = loadPatients();
-                const sortedPatients = sortPatientsByDate(patients);
-                sortedPatients.splice(index, 1);
-                localStorage.setItem('patients', JSON.stringify(sortedPatients));
+                // Load all patients from localStorage
+                let allPatients = [];
+                try {
+                    const storedPatients = localStorage.getItem('patients');
+                    if (storedPatients) {
+                        allPatients = JSON.parse(storedPatients);
+                    }
+                } catch (e) {
+                    console.error('Error loading patient data:', e);
+                }
+                
+                // Filter and sort current doctor's patients
+                const currentDoctorId = getCurrentDoctorId();
+                const doctorPatients = allPatients.filter(patient => patient.doctorId === currentDoctorId);
+                const sortedDoctorPatients = sortPatientsByDate(doctorPatients);
+                
+                // Get the patient to remove
+                const patientToRemove = sortedDoctorPatients[index];
+                if (!patientToRemove) return;
+                
+                // Remove from all patients array
+                const updatedAllPatients = allPatients.filter(patient => 
+                    !(patient.createdAt === patientToRemove.createdAt && 
+                      patient.patientName === patientToRemove.patientName &&
+                      patient.doctorId === patientToRemove.doctorId)
+                );
+                
+                localStorage.setItem('patients', JSON.stringify(updatedAllPatients));
                 
                 console.log('Patient removed from queue');
                 
@@ -220,11 +264,28 @@
             }
         }
 
-        // Function to clear all patients
+        // Function to clear all patients for current doctor
         function clearAllPatients() {
-            if (confirm('Are you sure you want to clear all patients? This cannot be undone.')) {
-                localStorage.removeItem('patients');
-                console.log('All patients cleared from queue');
+            const currentDoctorId = getCurrentDoctorId();
+            const doctorNumber = currentDoctorId === 'doctor1' ? '1' : '2';
+            
+            if (confirm(`Are you sure you want to clear all patients for Doctor ${doctorNumber}? This cannot be undone.`)) {
+                // Load all patients from localStorage
+                let allPatients = [];
+                try {
+                    const storedPatients = localStorage.getItem('patients');
+                    if (storedPatients) {
+                        allPatients = JSON.parse(storedPatients);
+                    }
+                } catch (e) {
+                    console.error('Error loading patient data:', e);
+                }
+                
+                // Remove only current doctor's patients
+                const updatedAllPatients = allPatients.filter(patient => patient.doctorId !== currentDoctorId);
+                localStorage.setItem('patients', JSON.stringify(updatedAllPatients));
+                
+                console.log(`All patients cleared for Doctor ${doctorNumber}`);
                 displayPatients();
             }
         }
@@ -240,6 +301,9 @@
 
         // Initialize the display when the page loads
         window.onload = function() {
+            // Update page for current doctor
+            updatePageForDoctor();
+            
             displayPatients();
             
             // Ensure WebSocket is connected

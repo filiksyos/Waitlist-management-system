@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Doctor System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #4682B4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #3a6d99;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multi-Doctor System Test</h1>
+    
+    <div class="test-section">
+        <h3>Add Test Patients</h3>
+        <button onclick="addTestPatient('doctor1')">Add Patient to Doctor 1</button>
+        <button onclick="addTestPatient('doctor2')">Add Patient to Doctor 2</button>
+        <button onclick="addMultiplePatients()">Add Multiple Test Patients</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>View Current Queue</h3>
+        <button onclick="showCurrentQueue()">Show All Patients</button>
+        <button onclick="clearAllPatients()">Clear All Patients</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Quick Links</h3>
+        <button onclick="window.open('Doctor.html?doctor=doctor1', '_blank')">Open Doctor 1</button>
+        <button onclick="window.open('Doctor.html?doctor=doctor2', '_blank')">Open Doctor 2</button>
+        <button onclick="window.open('Display.html', '_blank')">Open Display</button>
+        <button onclick="window.open('Receptionist.html', '_blank')">Open Receptionist</button>
+    </div>
+    
+    <div id="status"></div>
+    <div id="queueDisplay"></div>
+    
+    <script src="client.js"></script>
+    <script>
+        const testNames = [
+            'Ahmed Hassan', 'Fatima Ali', 'Mohamed Ibrahim', 'Aisha Mohammed',
+            'Omar Abdullah', 'Maryam Ahmed', 'Ibrahim Yusuf', 'Khadija Omar',
+            'Hassan Mohamed', 'Amina Hassan', 'Ali Ibrahim', 'Zainab Ahmed'
+        ];
+        
+        let patientCounter = 1;
+        
+        function addTestPatient(doctorId) {
+            const name = testNames[Math.floor(Math.random() * testNames.length)];
+            const today = new Date().toISOString().split('T')[0];
+            
+            const patientData = {
+                cardNumber: `C${String(patientCounter).padStart(3, '0')}`,
+                date: today,
+                patientName: `${name} (Test)`,
+                age: String(Math.floor(Math.random() * 50) + 20),
+                sex: Math.random() > 0.5 ? 'M' : 'F',
+                address: 'Test Address',
+                wereda: 'Test Wereda',
+                kebele: 'Test Kebele',
+                phoneNumber: `091234${String(patientCounter).padStart(4, '0')}`,
+                doctorId: doctorId,
+                createdAt: new Date().toISOString()
+            };
+            
+            // Get existing patients
+            let patients = [];
+            try {
+                const stored = localStorage.getItem('patients');
+                if (stored) patients = JSON.parse(stored);
+            } catch (e) {
+                console.error('Error loading patients:', e);
+            }
+            
+            // Add new patient
+            patients.push(patientData);
+            
+            // Save to localStorage
+            localStorage.setItem('patients', JSON.stringify(patients));
+            
+            // Broadcast update
+            if (window.broadcastQueueUpdate) {
+                window.broadcastQueueUpdate();
+            }
+            
+            showStatus(`Added ${patientData.patientName} to ${doctorId === 'doctor1' ? 'Doctor 1' : 'Doctor 2'}`, 'success');
+            patientCounter++;
+        }
+        
+        function addMultiplePatients() {
+            // Add 3 patients to doctor1 and 2 to doctor2
+            for (let i = 0; i < 3; i++) {
+                addTestPatient('doctor1');
+            }
+            for (let i = 0; i < 2; i++) {
+                addTestPatient('doctor2');
+            }
+            showStatus('Added multiple test patients to both doctors', 'success');
+        }
+        
+        function showCurrentQueue() {
+            try {
+                const stored = localStorage.getItem('patients');
+                const patients = stored ? JSON.parse(stored) : [];
+                
+                const doctor1Patients = patients.filter(p => p.doctorId === 'doctor1');
+                const doctor2Patients = patients.filter(p => p.doctorId === 'doctor2');
+                
+                let html = '<h3>Current Queue Status</h3>';
+                html += `<h4>Doctor 1 (${doctor1Patients.length} patients):</h4>`;
+                if (doctor1Patients.length === 0) {
+                    html += '<p>No patients</p>';
+                } else {
+                    html += '<ul>';
+                    doctor1Patients.forEach((p, i) => {
+                        html += `<li>${i + 1}. ${p.patientName}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+                html += `<h4>Doctor 2 (${doctor2Patients.length} patients):</h4>`;
+                if (doctor2Patients.length === 0) {
+                    html += '<p>No patients</p>';
+                } else {
+                    html += '<ul>';
+                    doctor2Patients.forEach((p, i) => {
+                        html += `<li>${i + 1}. ${p.patientName}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+                document.getElementById('queueDisplay').innerHTML = html;
+                
+            } catch (e) {
+                showStatus('Error reading queue data: ' + e.message, 'error');
+            }
+        }
+        
+        function clearAllPatients() {
+            if (confirm('Are you sure you want to clear all test patients?')) {
+                localStorage.removeItem('patients');
+                if (window.broadcastQueueUpdate) {
+                    window.broadcastQueueUpdate();
+                }
+                showStatus('All patients cleared', 'success');
+                document.getElementById('queueDisplay').innerHTML = '';
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 3000);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            showCurrentQueue();
+        });
+    </script>
+</body>
+</html> 

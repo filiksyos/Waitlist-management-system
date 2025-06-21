@@ -10,11 +10,9 @@
       background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%);
       margin: 0;
       padding: 0;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
     }
     
     .display-badge {
@@ -23,83 +21,175 @@
       padding: 10px 20px;
       border-radius: 8px;
       text-align: center;
-      margin: 20px 0 10px 0;
+      margin: 20px auto 10px auto;
       font-weight: bold;
       font-size: 1.1em;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: fit-content;
     }
     
     h1 {
       color: #495057;
-      margin-top: 10px;
-      margin-bottom: 10px;
+      margin: 10px 0 20px 0;
       font-size: 2.2em;
       font-weight: 600;
+      text-align: center;
     }
-    .queue-list {
-      margin-top: 30px;
-      width: 90vw;
-      max-width: 600px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 30px 0 20px 0;
+    
+    .split-container {
+      display: grid;
+      grid-template-columns: 1fr 2px 1fr;
+      flex: 1;
+      gap: 0;
+      padding: 0 20px 20px 20px;
     }
-    .queue-item {
+    
+    .doctor-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .doctor-header {
+      background: #4682B4;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px 8px 0 0;
       font-size: 1.5em;
-      padding: 18px 0;
+      font-weight: bold;
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .queue-list {
+      width: 90%;
+      max-width: 500px;
+      background: #fff;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 20px 0;
+      flex: 1;
+      min-height: 400px;
+    }
+    
+    .queue-item {
+      font-size: 1.3em;
+      padding: 15px 20px;
       border-bottom: 1px solid #e0e0e0;
       text-align: center;
       font-weight: 500;
       color: #495057;
     }
+    
     .queue-item:last-child {
       border-bottom: none;
     }
+    
     .empty-message {
       text-align: center;
       color: #888;
-      font-size: 1.2em;
-      margin-top: 40px;
+      font-size: 1.1em;
+      margin-top: 60px;
       font-weight: 400;
+      font-style: italic;
+    }
+    
+    .divider {
+      background: linear-gradient(to bottom, #ccc 0%, #888 50%, #ccc 100%);
+      width: 2px;
+      margin: 20px 0;
     }
   </style>
 </head>
 <body>
   <div class="display-badge">📺 Public Display</div>
   <h1>Patient Queue</h1>
-  <div class="queue-list" id="queueList">
-    <!-- Patient names will be inserted here -->
-  </div>
-  <div class="empty-message" id="emptyMessage" style="display:none;">
-    No patients in the queue.
+  
+  <div class="split-container">
+    <!-- Doctor 1 Section -->
+    <div class="doctor-section">
+      <div class="doctor-header">Doctor 1 Queue</div>
+      <div class="queue-list" id="doctor1QueueList">
+        <!-- Doctor 1 patients will be inserted here -->
+      </div>
+      <div class="empty-message" id="doctor1EmptyMessage" style="display:none;">
+        No patients for Doctor 1.
+      </div>
+    </div>
+    
+    <!-- Vertical Divider -->
+    <div class="divider"></div>
+    
+    <!-- Doctor 2 Section -->
+    <div class="doctor-section">
+      <div class="doctor-header">Doctor 2 Queue</div>
+      <div class="queue-list" id="doctor2QueueList">
+        <!-- Doctor 2 patients will be inserted here -->
+      </div>
+      <div class="empty-message" id="doctor2EmptyMessage" style="display:none;">
+        No patients for Doctor 2.
+      </div>
+    </div>
   </div>
   <script src="client.js"></script>
   <script>
-    // This will be filled by client.js via WebSocket updates
-    function renderQueue(patients) {
-      const queueList = document.getElementById('queueList');
-      const emptyMessage = document.getElementById('emptyMessage');
+    // Function to render a single doctor's queue
+    function renderDoctorQueue(patients, doctorId) {
+      const queueList = document.getElementById(`${doctorId}QueueList`);
+      const emptyMessage = document.getElementById(`${doctorId}EmptyMessage`);
+      
+      // Clear current queue
       queueList.innerHTML = '';
-      if (!patients || patients.length === 0) {
+      
+      // Filter patients for this doctor
+      const doctorPatients = patients.filter(patient => patient.doctorId === doctorId);
+      
+      // Sort patients by creation time (FIFO)
+      const sortedPatients = doctorPatients.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        }
+        return 0;
+      });
+      
+      if (sortedPatients.length === 0) {
         emptyMessage.style.display = 'block';
         return;
       }
+      
       emptyMessage.style.display = 'none';
-      patients.forEach((patient, idx) => {
+      
+      sortedPatients.forEach((patient, idx) => {
         const div = document.createElement('div');
         div.className = 'queue-item';
-        div.textContent = `${idx + 1}. ${patient.patientName || '-'}`;
+        div.textContent = `${idx + 1}. ${patient.patientName || 'Unknown Patient'}`;
         queueList.appendChild(div);
       });
     }
+    
+    // Main function to render both doctor queues
+    function renderQueue(patients) {
+      if (!patients || !Array.isArray(patients)) {
+        patients = [];
+      }
+      
+      // Render both doctor queues
+      renderDoctorQueue(patients, 'doctor1');
+      renderDoctorQueue(patients, 'doctor2');
+    }
+    
     // Initial render from localStorage (for first load)
     let patients = [];
     try {
       const stored = localStorage.getItem('patients');
       if (stored) patients = JSON.parse(stored);
-    } catch {}
+    } catch (e) {
+      console.error('Error loading initial patient data:', e);
+    }
     renderQueue(patients);
+    
     // client.js will call window.renderQueue when updates arrive
     window.renderQueue = renderQueue;
   </script>
