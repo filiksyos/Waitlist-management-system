@@ -1,37 +1,230 @@
 body {
   font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%);
+  background: #000;
   margin: 0;
   padding: 0;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
 }
 
-.display-badge {
-  background: #6C757D;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  text-align: center;
-  margin: 20px 0 10px 0;
-  font-weight: bold;
-  font-size: 1.1em;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.hdmi-status {
+.connection-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 10px 0;
+  font-size: 0.8em;
+  color: #fff;
+  background: rgba(0,0,0,0.7);
+  padding: 5px 10px;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.status-indicator {
+  font-size: 1.2em;
+  transition: color 0.3s ease;
+}
+
+.status-indicator.connected {
+  color: #28a745;
+}
+
+.status-indicator.disconnected {
+  color: #dc3545;
+}
+
+.status-indicator.connecting {
+  color: #ffc107;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.split-container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+.doctor-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-right: 4px solid #000;
+}
+
+.doctor-section:last-child {
+  border-right: none;
+}
+
+.doctor-header {
+  background: #2c3e50;
+  color: white;
+  padding: 12px 20px;
+  font-size: 2.5em;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 4px solid #000;
+  flex-shrink: 0;
+}
+
+.queue-container {
+  flex: 1;
+  padding: 10px 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.queue-item {
+  font-size: 2.8em;
+  font-weight: bold;
+  padding: 12px 20px;
+  border-bottom: 1px solid #ddd;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  flex-shrink: 0;
+}
+
+.queue-item:last-child {
+  border-bottom: none;
+}
+
+.queue-number {
+  background: #3498db;
+  color: white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  margin-right: 20px;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.patient-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.empty-message {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 2.5em;
+  font-weight: bold;
+  margin-top: 50px;
+  padding: 0 20px;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-height: 900px) {
+  .doctor-header {
+    font-size: 2.2em;
+    padding: 10px 15px;
+  }
+  
+  .queue-item {
+    padding: 10px 15px;
+  }
+  
+  .queue-number {
+    width: 55px;
+    height: 55px;
+    margin-right: 18px;
+    font-size: 0.9em;
+  }
+  
+  .empty-message {
+    margin-top: 40px;
+  }
+}
+
+@media (max-height: 800px) {
+  .doctor-header {
+    font-size: 2em;
+    padding: 8px 15px;
+  }
+  
+  .queue-item {
+    font-size: 2.8em;
+    padding: 8px 15px;
+  }
+  
+  .queue-number {
+    width: 50px;
+    height: 50px;
+    margin-right: 15px;
+    font-size: 0.8em;
+  }
+  
+  .queue-container {
+    padding: 8px 12px;
+  }
+  
+  .empty-message {
+    margin-top: 30px;
+    font-size: 2.2em;
+  }
+}
+
+@media (max-height: 600px) {
+  .doctor-header {
+    font-size: 1.8em;
+    padding: 6px 12px;
+  }
+  
+  .queue-item {
+    font-size: 2.8em;
+    padding: 6px 12px;
+  }
+  
+  .queue-number {
+    width: 45px;
+    height: 45px;
+    margin-right: 12px;
+    font-size: 0.7em;
+  }
+  
+  .queue-container {
+    padding: 6px 10px;
+  }
+  
+  .empty-message {
+    margin-top: 20px;
+    font-size: 2em;
+  }
+}
+
+/* HDMI Status - keep for electron functionality */
+.hdmi-status {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 0.9em;
+  font-size: 0.8em;
   font-weight: 500;
   transition: all 0.3s ease;
+  z-index: 1000;
 }
 
 .hdmi-status.connected {
@@ -59,80 +252,4 @@ body {
 @keyframes pulse-warning {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
-}
-
-h1 {
-  color: #495057;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  font-size: 2.2em;
-  font-weight: 600;
-}
-
-.connection-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 0;
-  font-size: 0.9em;
-  color: #666;
-}
-
-.status-indicator {
-  font-size: 1.2em;
-  transition: color 0.3s ease;
-}
-
-.status-indicator.connected {
-  color: #28a745;
-}
-
-.status-indicator.disconnected {
-  color: #dc3545;
-}
-
-.status-indicator.connecting {
-  color: #ffc107;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.queue-list {
-  margin-top: 30px;
-  width: 90vw;
-  max-width: 600px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  padding: 30px 0 20px 0;
-}
-
-.queue-item {
-  font-size: 1.5em;
-  padding: 18px 0;
-  border-bottom: 1px solid #e0e0e0;
-  text-align: center;
-  font-weight: 500;
-  color: #495057;
-  transition: background-color 0.3s ease;
-}
-
-.queue-item:last-child {
-  border-bottom: none;
-}
-
-.queue-item:hover {
-  background-color: #f8f9fa;
-}
-
-.empty-message {
-  text-align: center;
-  color: #888;
-  font-size: 1.2em;
-  margin-top: 40px;
-  font-weight: 400;
 } 

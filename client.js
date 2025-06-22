@@ -73,37 +73,56 @@ function connectWebSocket() {
   ws.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
+      console.log('📨 client.js received WebSocket message:', msg);
+      
       if (msg.type === 'update') {
+        console.log('🔄 client.js processing update with', msg.patients ? msg.patients.length : 0, 'patients');
+        
         // Update localStorage
         localStorage.setItem('patients', JSON.stringify(msg.patients));
+        console.log('💾 client.js updated localStorage');
         
         const currentRole = getCurrentRole();
         const currentDoctorId = getCurrentDoctorId();
+        console.log(`🎭 client.js current role: ${currentRole}, doctor: ${currentDoctorId}`);
         
         // Filter patients based on current interface role
         let filteredPatients = msg.patients;
         if (currentRole === 'doctor') {
           filteredPatients = filterPatientsByDoctor(msg.patients, currentDoctorId);
+          console.log(`🔍 client.js filtered to ${filteredPatients.length} patients for ${currentDoctorId}`);
         }
         
         // Update UI - try all possible render functions
         if (window.renderQueue) {
+          console.log('🎯 client.js calling window.renderQueue');
           if (currentRole === 'display') {
             // Display interface needs all patients for split screen
             window.renderQueue(msg.patients);
           } else {
             window.renderQueue(filteredPatients);
           }
+          console.log('✅ client.js window.renderQueue completed');
+        } else {
+          console.warn('⚠️ client.js window.renderQueue not available');
         }
+        
         if (typeof displayPatients === 'function') {
+          console.log('🎯 client.js calling displayPatients');
           displayPatients();
+          console.log('✅ client.js displayPatients completed');
         }
+        
         if (window.updateDisplay) {
+          console.log('🎯 client.js calling window.updateDisplay');
           window.updateDisplay(msg.patients);
+          console.log('✅ client.js window.updateDisplay completed');
         }
+      } else {
+        console.log('ℹ️ client.js received non-update message type:', msg.type);
       }
     } catch (e) {
-      console.error('WebSocket message error:', e);
+      console.error('❌ client.js WebSocket message error:', e);
     }
   };
 

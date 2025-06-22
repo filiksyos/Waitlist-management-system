@@ -7,20 +7,37 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="display-badge">📺 Clinic Display</div>
-  <h1>Patient Queue</h1>
-  
   <div class="connection-status" id="connectionStatus">
     <span class="status-indicator" id="statusIndicator">●</span>
     <span id="statusText">Connecting...</span>
   </div>
   
-  <div class="queue-list" id="queueList">
-    <!-- Patient names will be inserted here -->
-  </div>
-  
-  <div class="empty-message" id="emptyMessage" style="display:none;">
-    No patients in the queue.
+  <div class="split-container">
+    <!-- Doctor 1 Section -->
+    <div class="doctor-section">
+      <div class="doctor-header">DOCTOR 1</div>
+      <div class="queue-container">
+        <div id="doctor1QueueList">
+          <!-- Doctor 1 patients will be inserted here -->
+        </div>
+        <div class="empty-message" id="doctor1EmptyMessage" style="display:none;">
+          NO PATIENTS
+        </div>
+      </div>
+    </div>
+    
+    <!-- Doctor 2 Section -->
+    <div class="doctor-section">
+      <div class="doctor-header">DOCTOR 2</div>
+      <div class="queue-container">
+        <div id="doctor2QueueList">
+          <!-- Doctor 2 patients will be inserted here -->
+        </div>
+        <div class="empty-message" id="doctor2EmptyMessage" style="display:none;">
+          NO PATIENTS
+        </div>
+      </div>
+    </div>
   </div>
   
   <script src="../client.js"></script>

@@ -13,8 +13,6 @@ class QueueDisplay {
   }
 
   initializeElements() {
-    this.queueList = document.getElementById('queueList');
-    this.emptyMessage = document.getElementById('emptyMessage');
     this.statusIndicator = document.getElementById('statusIndicator');
     this.statusText = document.getElementById('statusText');
     
@@ -31,9 +29,8 @@ class QueueDisplay {
       <span id="hdmiText">Checking HDMI...</span>
     `;
     
-    // Insert after the display badge
-    const displayBadge = document.querySelector('.display-badge');
-    displayBadge.parentNode.insertBefore(hdmiStatus, displayBadge.nextSibling);
+    // Insert at the beginning of body
+    document.body.insertBefore(hdmiStatus, document.body.firstChild);
   }
 
   setupHDMIStatusHandling() {
@@ -71,7 +68,7 @@ class QueueDisplay {
     } else {
       hdmiStatus.className = 'hdmi-status disconnected';
       hdmiIndicator.textContent = '📺';
-      hdmiText.textContent = 'HDMI Not Connected - Please connect external display';
+      hdmiText.textContent = 'HDMI Not Connected';
     }
   }
 
@@ -122,32 +119,60 @@ class QueueDisplay {
     this.statusText.textContent = text;
   }
 
-  renderQueue() {
-    this.queueList.innerHTML = '';
+  // Function to render a single doctor's queue
+  renderDoctorQueue(patients, doctorId) {
+    const queueList = document.getElementById(`${doctorId}QueueList`);
+    const emptyMessage = document.getElementById(`${doctorId}EmptyMessage`);
     
-    if (!this.patients || this.patients.length === 0) {
-      this.emptyMessage.style.display = 'block';
-      return;
-    }
+    // Clear current queue
+    queueList.innerHTML = '';
     
-    this.emptyMessage.style.display = 'none';
+    // Filter patients for this doctor
+    const doctorPatients = patients.filter(patient => patient.doctorId === doctorId);
     
-    // Sort patients by creation time for proper queue order
-    const sortedPatients = this.patients.sort((a, b) => {
+    // Sort patients by creation time (FIFO)
+    const sortedPatients = doctorPatients.sort((a, b) => {
       if (a.createdAt && b.createdAt) {
         return new Date(a.createdAt) - new Date(b.createdAt);
       }
       return 0;
     });
     
+    if (sortedPatients.length === 0) {
+      emptyMessage.style.display = 'block';
+      return;
+    }
+    
+    emptyMessage.style.display = 'none';
+    
     sortedPatients.forEach((patient, idx) => {
       const div = document.createElement('div');
       div.className = 'queue-item';
-      div.textContent = `${idx + 1}. ${patient.patientName || 'Unknown Patient'}`;
-      this.queueList.appendChild(div);
+      
+      const numberDiv = document.createElement('div');
+      numberDiv.className = 'queue-number';
+      numberDiv.textContent = idx + 1;
+      
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'patient-name';
+      nameDiv.textContent = patient.patientName || 'Unknown Patient';
+      
+      div.appendChild(numberDiv);
+      div.appendChild(nameDiv);
+      queueList.appendChild(div);
     });
+  }
 
-    console.log('Queue rendered with', sortedPatients.length, 'patients');
+  renderQueue() {
+    if (!this.patients || !Array.isArray(this.patients)) {
+      this.patients = [];
+    }
+    
+    // Render both doctor queues
+    this.renderDoctorQueue(this.patients, 'doctor1');
+    this.renderDoctorQueue(this.patients, 'doctor2');
+
+    console.log('Queue rendered with', this.patients.length, 'patients');
   }
 }
 
