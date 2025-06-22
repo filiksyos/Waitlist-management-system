@@ -63,7 +63,12 @@ class DisplayManager {
   getTVWindowBounds() {
     if (!this.tvDisplay) {
       console.log('No TV display available, using primary display');
-      return this.primaryDisplay.workingArea;
+      return {
+        x: this.primaryDisplay.bounds.x,
+        y: this.primaryDisplay.bounds.y,
+        width: this.primaryDisplay.bounds.width,
+        height: this.primaryDisplay.bounds.height
+      };
     }
 
     return {
@@ -88,7 +93,7 @@ class DisplayManager {
     return this.displays.map(display => ({
       id: display.id,
       bounds: display.bounds,
-      workingArea: display.workingArea,
+      workArea: display.workArea,
       scaleFactor: display.scaleFactor,
       rotation: display.rotation,
       isPrimary: display.id === this.primaryDisplay.id

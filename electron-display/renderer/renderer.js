@@ -4,75 +4,15 @@ const WebSocket = require('ws');
 class QueueDisplay {
   constructor() {
     this.patients = [];
-    this.hdmiConnected = false;
     
     this.initializeElements();
     this.loadInitialData();
     this.setupWebSocketIntegration();
-    this.setupHDMIStatusHandling();
   }
 
   initializeElements() {
-    this.queueList = document.getElementById('queueList');
-    this.emptyMessage = document.getElementById('emptyMessage');
     this.statusIndicator = document.getElementById('statusIndicator');
     this.statusText = document.getElementById('statusText');
-    
-    // Create HDMI status element
-    this.createHDMIStatusElement();
-  }
-
-  createHDMIStatusElement() {
-    const hdmiStatus = document.createElement('div');
-    hdmiStatus.className = 'hdmi-status';
-    hdmiStatus.id = 'hdmiStatus';
-    hdmiStatus.innerHTML = `
-      <span class="hdmi-indicator" id="hdmiIndicator">📺</span>
-      <span id="hdmiText">Checking HDMI...</span>
-    `;
-    
-    // Insert after the display badge
-    const displayBadge = document.querySelector('.display-badge');
-    displayBadge.parentNode.insertBefore(hdmiStatus, displayBadge.nextSibling);
-  }
-
-  setupHDMIStatusHandling() {
-    // Listen for display status from main process
-    ipcRenderer.on('display-status', (event, data) => {
-      this.hdmiConnected = data.hdmiConnected;
-      this.updateHDMIStatus();
-      console.log('Display status received:', data);
-    });
-
-    // Listen for HDMI connected
-    ipcRenderer.on('hdmi-connected', (event, data) => {
-      this.hdmiConnected = true;
-      this.updateHDMIStatus();
-      console.log('HDMI connected:', data);
-    });
-
-    // Listen for HDMI disconnected
-    ipcRenderer.on('hdmi-disconnected', (event, data) => {
-      this.hdmiConnected = false;
-      this.updateHDMIStatus();
-      console.log('HDMI disconnected');
-    });
-  }
-
-  updateHDMIStatus() {
-    const hdmiIndicator = document.getElementById('hdmiIndicator');
-    const hdmiText = document.getElementById('hdmiText');
-    const hdmiStatus = document.getElementById('hdmiStatus');
-    
-    if (this.hdmiConnected) {
-      hdmiStatus.className = 'hdmi-status connected';
-      hdmiIndicator.textContent = '📺';
-      hdmiText.textContent = 'HDMI Connected';
-    } else {
-      hdmiStatus.className = 'hdmi-status disconnected';
-      hdmiIndicator.textContent = '📺';
-      hdmiText.textContent = 'HDMI Not Connected - Please connect external display';
-    }
   }
 
   loadInitialData() {
@@ -81,7 +21,7 @@ class QueueDisplay {
       const storedPatients = localStorage.getItem('patients');
       if (storedPatients) {
         this.patients = JSON.parse(storedPatients);
-        this.renderQueue();
+        this.renderQueue(this.patients);
       }
     } catch (error) {
       console.error('Error loading initial patient data:', error);
@@ -92,12 +32,12 @@ class QueueDisplay {
     // Set up integration with client.js WebSocket system
     window.renderQueue = (patients) => {
       this.patients = patients || [];
-      this.renderQueue();
+      this.renderQueue(this.patients);
     };
 
     window.updateDisplay = (patients) => {
       this.patients = patients || [];
-      this.renderQueue();
+      this.renderQueue(this.patients);
     };
 
     // Monitor WebSocket connection status from client.js
@@ -122,32 +62,80 @@ class QueueDisplay {
     this.statusText.textContent = text;
   }
 
-  renderQueue() {
-    this.queueList.innerHTML = '';
+  // Create position badge element
+  createPositionBadge(position) {
+    const badge = document.createElement('div');
+    badge.className = 'position-badge';
+    badge.textContent = position;
+    return badge;
+  }
+
+  // Truncate patient name if too long
+  truncatePatientName(name, maxLength = 25) {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength - 3) + '...';
+  }
+
+  // Function to render a single doctor's queue
+  renderDoctorQueue(patients, doctorId) {
+    const queueList = document.getElementById(`${doctorId}QueueList`);
+    const emptyState = document.getElementById(`${doctorId}EmptyState`);
     
-    if (!this.patients || this.patients.length === 0) {
-      this.emptyMessage.style.display = 'block';
-      return;
-    }
+    // Clear current queue
+    queueList.innerHTML = '';
     
-    this.emptyMessage.style.display = 'none';
+    // Filter patients for this doctor
+    const doctorPatients = patients.filter(patient => patient.doctorId === doctorId);
     
-    // Sort patients by creation time for proper queue order
-    const sortedPatients = this.patients.sort((a, b) => {
+    // Sort patients by creation time (FIFO)
+    const sortedPatients = doctorPatients.sort((a, b) => {
       if (a.createdAt && b.createdAt) {
         return new Date(a.createdAt) - new Date(b.createdAt);
       }
       return 0;
     });
     
-    sortedPatients.forEach((patient, idx) => {
-      const div = document.createElement('div');
-      div.className = 'queue-item';
-      div.textContent = `${idx + 1}. ${patient.patientName || 'Unknown Patient'}`;
-      this.queueList.appendChild(div);
+    if (sortedPatients.length === 0) {
+      queueList.style.display = 'none';
+      emptyState.style.display = 'flex';
+      return;
+    }
+    
+    queueList.style.display = 'flex';
+    emptyState.style.display = 'none';
+    
+    // Limit to 10 patients maximum
+    const displayPatients = sortedPatients.slice(0, 10);
+    
+    displayPatients.forEach((patient, idx) => {
+      const queueItem = document.createElement('div');
+      queueItem.className = 'queue-item';
+      
+      // Create position badge
+      const badge = this.createPositionBadge(idx + 1);
+      queueItem.appendChild(badge);
+      
+      // Create patient name element
+      const nameElement = document.createElement('div');
+      nameElement.className = 'patient-name';
+      nameElement.textContent = this.truncatePatientName(patient.patientName || 'Unknown Patient');
+      queueItem.appendChild(nameElement);
+      
+      queueList.appendChild(queueItem);
     });
+  }
 
-    console.log('Queue rendered with', sortedPatients.length, 'patients');
+  // Main function to render both doctor queues
+  renderQueue(patients) {
+    if (!patients || !Array.isArray(patients)) {
+      patients = [];
+    }
+    
+    // Render both doctor queues
+    this.renderDoctorQueue(patients, 'doctor1');
+    this.renderDoctorQueue(patients, 'doctor2');
+    
+    console.log('Queue rendered with', patients.length, 'total patients');
   }
 }
 
@@ -157,4 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Also expose the display instance globally for debugging
   window.queueDisplay = display;
+  
+  // Set up the global renderQueue function for client.js integration
+  window.renderQueue = (patients) => {
+    display.renderQueue(patients);
+  };
 }); 
