@@ -208,14 +208,6 @@
       // Filter patients for this doctor
       const doctorPatients = allPatients.filter(patient => patient.doctorId === doctorId);
       
-      // Sort by createdAt for consistent ordering
-      doctorPatients.sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        }
-        return 0;
-      });
-      
       // Clear current content
       queueContainer.innerHTML = '';
       
@@ -267,14 +259,6 @@
       // Filter patients for this doctor
       const doctorPatients = patients.filter(patient => patient.doctorId === doctorId);
       const otherPatients = patients.filter(patient => patient.doctorId !== doctorId);
-      
-      // Sort doctor patients by createdAt
-      doctorPatients.sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        }
-        return 0;
-      });
       
       // Create new patient object
       const newPatient = {
@@ -332,14 +316,6 @@
       const doctorPatients = patients.filter(patient => patient.doctorId === doctorId);
       const otherPatients = patients.filter(patient => patient.doctorId !== doctorId);
       
-      // Sort doctor patients by createdAt
-      doctorPatients.sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        }
-        return 0;
-      });
-      
       if (index >= 0 && index < doctorPatients.length) {
         const patient = doctorPatients[index];
         
@@ -382,14 +358,6 @@
       // Filter patients for this doctor
       const doctorPatients = patients.filter(patient => patient.doctorId === doctorId);
       
-      // Sort doctor patients by createdAt
-      doctorPatients.sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        }
-        return 0;
-      });
-      
       if (index >= 0 && index < doctorPatients.length) {
         const patient = doctorPatients[index];
         
@@ -425,14 +393,6 @@
         
         // Get target doctor's patients
         const targetDoctorPatients = allOtherPatients.filter(p => p.doctorId === newDoctorId);
-        
-        // Sort target doctor patients
-        targetDoctorPatients.sort((a, b) => {
-          if (a.createdAt && b.createdAt) {
-            return new Date(a.createdAt) - new Date(b.createdAt);
-          }
-          return 0;
-        });
         
         // Insert patient at new position
         const insertIndex = Math.max(0, Math.min(position - 1, targetDoctorPatients.length));

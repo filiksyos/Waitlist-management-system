@@ -143,8 +143,8 @@ function patchFunctions() {
   // Patch removePatient for Doctor
   if (typeof window.removePatient === 'function') {
     const originalRemovePatient = window.removePatient;
-    window.removePatient = function(index) {
-      originalRemovePatient.call(this, index);
+    window.removePatient = function(...args) {
+      originalRemovePatient.apply(this, args);
       setTimeout(() => {
         broadcastQueueUpdate();
       }, 100);
@@ -155,8 +155,8 @@ function patchFunctions() {
   // Patch clearAllPatients for Doctor
   if (typeof window.clearAllPatients === 'function') {
     const originalClearAllPatients = window.clearAllPatients;
-    window.clearAllPatients = function() {
-      originalClearAllPatients.call(this);
+    window.clearAllPatients = function(...args) {
+      originalClearAllPatients.apply(this, args);
       setTimeout(() => {
         broadcastQueueUpdate();
       }, 100);
