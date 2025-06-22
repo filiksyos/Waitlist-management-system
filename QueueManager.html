@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Manager - Mebrej Clinic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        
+        .role-badge {
+            background: #4682B4;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .add-patient-form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border: 1px solid #ccc;
+        }
+        
+        .add-patient-form h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .form-row label {
+            font-weight: bold;
+        }
+        
+        .form-row input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            min-width: 200px;
+        }
+        
+        .doctor-options {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #3e8e41;
+        }
+        
+        .queue-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .doctor-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .doctor-section h3 {
+            background-color: #4682B4;
+            color: white;
+            margin: -15px -15px 15px -15px;
+            padding: 15px;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .patient-row {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+        }
+        
+        .patient-name {
+            flex: 1;
+            font-weight: bold;
+        }
+        
+        .patient-row button {
+            padding: 4px 8px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .up-btn, .down-btn {
+            background-color: #2196F3;
+            min-width: 30px;
+        }
+        
+        .move-btn {
+            background-color: #FF9800;
+        }
+        
+        .remove-btn {
+            background-color: #f44336;
+        }
+        
+        .up-btn:hover, .down-btn:hover {
+            background-color: #1976D2;
+        }
+        
+        .move-btn:hover {
+            background-color: #F57C00;
+        }
+        
+        .remove-btn:hover {
+            background-color: #d32f2f;
+        }
+        
+        .empty-queue {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .position-number {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="role-badge">📋 Queue Manager Interface</div>
+    <h1>Queue Manager - Patient Queue Control</h1>
+    
+    <!-- Add Patient Form -->
+    <div class="add-patient-form">
+        <h3>Add New Patient</h3>
+        <form id="addPatientForm" onsubmit="addPatient(event)">
+            <div class="form-row">
+                <label for="patientName">Patient Name:</label>
+                <input type="text" id="patientName" name="patientName" required>
+                
+                <label>Doctor:</label>
+                <div class="doctor-options">
+                    <label class="radio-label">
+                        <input type="radio" name="doctorSelection" value="doctor1" required>
+                        Doctor 1
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="doctorSelection" value="doctor2" required>
+                        Doctor 2
+                    </label>
+                </div>
+                
+                <button type="submit">Add Patient</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Queue Display -->
+    <div class="queue-container">
+        <div class="doctor-section">
+            <h3>Doctor 1 Queue</h3>
+            <div id="doctor1Queue">
+                <!-- Doctor 1 patients will be inserted here -->
+            </div>
+        </div>
+        
+        <div class="doctor-section">
+            <h3>Doctor 2 Queue</h3>
+            <div id="doctor2Queue">
+                <!-- Doctor 2 patients will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+    <script>
+        // Global variables
+        let allPatients = [];
+
+        // Load patients from localStorage
+        function loadPatients() {
+            try {
+                const stored = localStorage.getItem('patients');
+                if (stored) {
+                    allPatients = JSON.parse(stored);
+                } else {
+                    allPatients = [];
+                }
+            } catch (e) {
+                console.error('Error loading patients:', e);
+                allPatients = [];
+            }
+        }
+
+        // Save patients to localStorage
+        function savePatients() {
+            try {
+                localStorage.setItem('patients', JSON.stringify(allPatients));
+            } catch (e) {
+                console.error('Error saving patients:', e);
+            }
+        }
+
+        // Rebuild timestamps for a doctor's queue
+        function rebuildTimestamps(doctorId) {
+            const doctorPatients = allPatients.filter(p => p.doctorId === doctorId);
+            doctorPatients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            
+            const baseTime = new Date().getTime();
+            doctorPatients.forEach((patient, index) => {
+                patient.createdAt = new Date(baseTime + (index * 60000)).toISOString();
+            });
+            
+            // Update the main array
+            allPatients.forEach(patient => {
+                const updated = doctorPatients.find(dp => dp.id === patient.id);
+                if (updated) {
+                    patient.createdAt = updated.createdAt;
+                }
+            });
+        }
+
+        // Add new patient
+        function addPatient(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const name = form.patientName.value.trim();
+            const doctorId = form.doctorSelection.value;
+            
+            if (!name) {
+                alert('Patient name is required');
+                return;
+            }
+            
+            const newPatient = {
+                id: Date.now() + Math.random(),
+                patientName: name,
+                doctorId: doctorId,
+                createdAt: new Date().toISOString(),
+                // Add minimal required fields for compatibility
+                cardNumber: '',
+                date: new Date().toLocaleDateString(),
+                age: '',
+                sex: '',
+                address: '',
+                wereda: '',
+                kebele: '',
+                phoneNumber: ''
+            };
+            
+            allPatients.push(newPatient);
+            rebuildTimestamps(doctorId);
+            savePatients();
+            broadcastQueueUpdate();
+            loadAndDisplayQueues();
+            
+            // Clear form
+            form.reset();
+        }
+
+        // Move patient up in queue
+        function movePatientUp(patientId, doctorId) {
+            const doctorPatients = allPatients.filter(p => p.doctorId === doctorId);
+            doctorPatients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            
+            const currentIndex = doctorPatients.findIndex(p => p.id === patientId);
+            if (currentIndex > 0) {
+                // Swap with previous patient
+                [doctorPatients[currentIndex], doctorPatients[currentIndex - 1]] = 
+                [doctorPatients[currentIndex - 1], doctorPatients[currentIndex]];
+                
+                // Update main array with new order
+                const baseTime = new Date().getTime();
+                doctorPatients.forEach((patient, index) => {
+                    const mainPatient = allPatients.find(p => p.id === patient.id);
+                    if (mainPatient) {
+                        mainPatient.createdAt = new Date(baseTime + (index * 60000)).toISOString();
+                    }
+                });
+                
+                savePatients();
+                broadcastQueueUpdate();
+                loadAndDisplayQueues();
+            }
+        }
+
+        // Move patient down in queue
+        function movePatientDown(patientId, doctorId) {
+            const doctorPatients = allPatients.filter(p => p.doctorId === doctorId);
+            doctorPatients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            
+            const currentIndex = doctorPatients.findIndex(p => p.id === patientId);
+            if (currentIndex < doctorPatients.length - 1 && currentIndex >= 0) {
+                // Swap with next patient
+                [doctorPatients[currentIndex], doctorPatients[currentIndex + 1]] = 
+                [doctorPatients[currentIndex + 1], doctorPatients[currentIndex]];
+                
+                // Update main array with new order
+                const baseTime = new Date().getTime();
+                doctorPatients.forEach((patient, index) => {
+                    const mainPatient = allPatients.find(p => p.id === patient.id);
+                    if (mainPatient) {
+                        mainPatient.createdAt = new Date(baseTime + (index * 60000)).toISOString();
+                    }
+                });
+                
+                savePatients();
+                broadcastQueueUpdate();
+                loadAndDisplayQueues();
+            }
+        }
+
+        // Move patient to other doctor
+        function movePatientToOtherDoctor(patientId, currentDoctorId) {
+            const patient = allPatients.find(p => p.id === patientId);
+            if (patient) {
+                const newDoctorId = currentDoctorId === 'doctor1' ? 'doctor2' : 'doctor1';
+                patient.doctorId = newDoctorId;
+                
+                // Give patient latest timestamp in new doctor's queue
+                const newDoctorPatients = allPatients.filter(p => p.doctorId === newDoctorId);
+                if (newDoctorPatients.length > 0) {
+                    const latestTime = Math.max(...newDoctorPatients.map(p => new Date(p.createdAt).getTime()));
+                    patient.createdAt = new Date(latestTime + 60000).toISOString();
+                } else {
+                    patient.createdAt = new Date().toISOString();
+                }
+                
+                savePatients();
+                broadcastQueueUpdate();
+                loadAndDisplayQueues();
+            }
+        }
+
+        // Remove patient from queue
+        function removePatient(patientId, patientName) {
+            if (confirm(`Remove ${patientName} from queue?`)) {
+                allPatients = allPatients.filter(p => p.id !== patientId);
+                savePatients();
+                broadcastQueueUpdate();
+                loadAndDisplayQueues();
+            }
+        }
+
+        // Display queues for both doctors
+        function loadAndDisplayQueues() {
+            loadPatients();
+            
+            // Render Doctor 1 queue
+            renderDoctorQueue('doctor1');
+            
+            // Render Doctor 2 queue
+            renderDoctorQueue('doctor2');
+        }
+
+        // Render individual doctor queue
+        function renderDoctorQueue(doctorId) {
+            const queueContainer = document.getElementById(`${doctorId}Queue`);
+            const doctorPatients = allPatients.filter(p => p.doctorId === doctorId);
+            
+            // Sort by creation time
+            doctorPatients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            
+            if (doctorPatients.length === 0) {
+                queueContainer.innerHTML = '<div class="empty-queue">No patients in queue</div>';
+                return;
+            }
+            
+            let html = '';
+            doctorPatients.forEach((patient, index) => {
+                html += `
+                    <div class="patient-row">
+                        <div class="position-number">${index + 1}</div>
+                        <div class="patient-name">${patient.patientName || 'Unknown Patient'}</div>
+                        <button class="up-btn" onclick="movePatientUp('${patient.id}', '${doctorId}')" 
+                                ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button class="down-btn" onclick="movePatientDown('${patient.id}', '${doctorId}')" 
+                                ${index === doctorPatients.length - 1 ? 'disabled' : ''}>↓</button>
+                        <button class="move-btn" onclick="movePatientToOtherDoctor('${patient.id}', '${doctorId}')">
+                            → Dr ${doctorId === 'doctor1' ? '2' : '1'}
+                        </button>
+                        <button class="remove-btn" onclick="removePatient('${patient.id}', '${patient.patientName}')">Remove</button>
+                    </div>
+                `;
+            });
+            
+            queueContainer.innerHTML = html;
+        }
+
+        // WebSocket update handler
+        window.renderQueue = function(patients) {
+            allPatients = patients || [];
+            loadAndDisplayQueues();
+        };
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAndDisplayQueues();
+        });
+
+        // Initial load
+        loadAndDisplayQueues();
+    </script>
+</body>
+</html> 
