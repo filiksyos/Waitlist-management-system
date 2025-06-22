@@ -225,6 +225,14 @@
                 const stored = localStorage.getItem('patients');
                 if (stored) {
                     allPatients = JSON.parse(stored);
+                    // Ensure all patients have IDs for button functionality
+                    allPatients.forEach(patient => {
+                        if (!patient.id) {
+                            patient.id = Date.now() + Math.random();
+                        }
+                    });
+                    // Save back with IDs
+                    localStorage.setItem('patients', JSON.stringify(allPatients));
                 } else {
                     allPatients = [];
                 }
@@ -294,20 +302,29 @@
             allPatients.push(newPatient);
             rebuildTimestamps(doctorId);
             savePatients();
-            broadcastQueueUpdate();
+            
+            // Broadcast update with error handling
+            if (window.broadcastQueueUpdate) {
+                window.broadcastQueueUpdate();
+            } else {
+                console.warn('broadcastQueueUpdate not available');
+            }
+            
             loadAndDisplayQueues();
             
             // Clear form
             form.reset();
         }
 
-        // Move patient up in queue
-        function movePatientUp(patientId, doctorId) {
-            const doctorPatients = allPatients.filter(p => p.doctorId === doctorId);
-            doctorPatients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                 // Move patient up in queue
+         function movePatientUp(patientId, doctorId) {
+             console.log('movePatientUp called:', patientId, doctorId);
+             const doctorPatients = allPatients.filter(p => p.doctorId === doctorId);
+             doctorPatients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
             
-            const currentIndex = doctorPatients.findIndex(p => p.id === patientId);
-            if (currentIndex > 0) {
+                         const currentIndex = doctorPatients.findIndex(p => p.id == patientId);
+             console.log('movePatientUp - Patient found at index:', currentIndex, 'of', doctorPatients.length);
+             if (currentIndex > 0) {
                 // Swap with previous patient
                 [doctorPatients[currentIndex], doctorPatients[currentIndex - 1]] = 
                 [doctorPatients[currentIndex - 1], doctorPatients[currentIndex]];
@@ -321,67 +338,101 @@
                     }
                 });
                 
-                savePatients();
-                broadcastQueueUpdate();
-                loadAndDisplayQueues();
-            }
-        }
+                                 savePatients();
+                 
+                 // Broadcast update with error handling
+                 if (window.broadcastQueueUpdate) {
+                     window.broadcastQueueUpdate();
+                 } else {
+                     console.warn('broadcastQueueUpdate not available');
+                 }
+                 
+                 loadAndDisplayQueues();
+             }
+         }
 
-        // Move patient down in queue
-        function movePatientDown(patientId, doctorId) {
-            const doctorPatients = allPatients.filter(p => p.doctorId === doctorId);
-            doctorPatients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-            
-            const currentIndex = doctorPatients.findIndex(p => p.id === patientId);
-            if (currentIndex < doctorPatients.length - 1 && currentIndex >= 0) {
-                // Swap with next patient
-                [doctorPatients[currentIndex], doctorPatients[currentIndex + 1]] = 
-                [doctorPatients[currentIndex + 1], doctorPatients[currentIndex]];
-                
-                // Update main array with new order
-                const baseTime = new Date().getTime();
-                doctorPatients.forEach((patient, index) => {
-                    const mainPatient = allPatients.find(p => p.id === patient.id);
-                    if (mainPatient) {
-                        mainPatient.createdAt = new Date(baseTime + (index * 60000)).toISOString();
-                    }
-                });
-                
-                savePatients();
-                broadcastQueueUpdate();
-                loadAndDisplayQueues();
-            }
-        }
+         // Move patient down in queue
+         function movePatientDown(patientId, doctorId) {
+             console.log('movePatientDown called:', patientId, doctorId);
+             const doctorPatients = allPatients.filter(p => p.doctorId === doctorId);
+             doctorPatients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+             
+             const currentIndex = doctorPatients.findIndex(p => p.id == patientId);
+             console.log('movePatientDown - Patient found at index:', currentIndex, 'of', doctorPatients.length);
+             if (currentIndex < doctorPatients.length - 1 && currentIndex >= 0) {
+                 // Swap with next patient
+                 [doctorPatients[currentIndex], doctorPatients[currentIndex + 1]] = 
+                 [doctorPatients[currentIndex + 1], doctorPatients[currentIndex]];
+                 
+                 // Update main array with new order
+                 const baseTime = new Date().getTime();
+                 doctorPatients.forEach((patient, index) => {
+                     const mainPatient = allPatients.find(p => p.id === patient.id);
+                     if (mainPatient) {
+                         mainPatient.createdAt = new Date(baseTime + (index * 60000)).toISOString();
+                     }
+                 });
+                 
+                 savePatients();
+                 
+                 // Broadcast update with error handling
+                 if (window.broadcastQueueUpdate) {
+                     window.broadcastQueueUpdate();
+                 } else {
+                     console.warn('broadcastQueueUpdate not available');
+                 }
+                 
+                 loadAndDisplayQueues();
+             }
+         }
 
-        // Move patient to other doctor
-        function movePatientToOtherDoctor(patientId, currentDoctorId) {
-            const patient = allPatients.find(p => p.id === patientId);
-            if (patient) {
-                const newDoctorId = currentDoctorId === 'doctor1' ? 'doctor2' : 'doctor1';
-                patient.doctorId = newDoctorId;
-                
-                // Give patient latest timestamp in new doctor's queue
-                const newDoctorPatients = allPatients.filter(p => p.doctorId === newDoctorId);
-                if (newDoctorPatients.length > 0) {
-                    const latestTime = Math.max(...newDoctorPatients.map(p => new Date(p.createdAt).getTime()));
-                    patient.createdAt = new Date(latestTime + 60000).toISOString();
-                } else {
-                    patient.createdAt = new Date().toISOString();
-                }
-                
-                savePatients();
-                broadcastQueueUpdate();
-                loadAndDisplayQueues();
-            }
-        }
+         // Move patient to other doctor
+         function movePatientToOtherDoctor(patientId, currentDoctorId) {
+             console.log('movePatientToOtherDoctor called:', patientId, currentDoctorId);
+             const patient = allPatients.find(p => p.id == patientId);
+             console.log('Patient found:', patient ? 'yes' : 'no');
+             if (patient) {
+                 const newDoctorId = currentDoctorId === 'doctor1' ? 'doctor2' : 'doctor1';
+                 patient.doctorId = newDoctorId;
+                 
+                 // Give patient latest timestamp in new doctor's queue
+                 const newDoctorPatients = allPatients.filter(p => p.doctorId === newDoctorId);
+                 if (newDoctorPatients.length > 0) {
+                     const latestTime = Math.max(...newDoctorPatients.map(p => new Date(p.createdAt).getTime()));
+                     patient.createdAt = new Date(latestTime + 60000).toISOString();
+                 } else {
+                     patient.createdAt = new Date().toISOString();
+                 }
+                 
+                 savePatients();
+                 
+                 // Broadcast update with error handling
+                 if (window.broadcastQueueUpdate) {
+                     window.broadcastQueueUpdate();
+                 } else {
+                     console.warn('broadcastQueueUpdate not available');
+                 }
+                 
+                 loadAndDisplayQueues();
+             }
+         }
 
-        // Remove patient from queue
-        function removePatient(patientId, patientName) {
-            if (confirm(`Remove ${patientName} from queue?`)) {
-                allPatients = allPatients.filter(p => p.id !== patientId);
-                savePatients();
-                broadcastQueueUpdate();
-                loadAndDisplayQueues();
+         // Remove patient from queue
+         function removePatient(patientId, patientName) {
+             console.log('removePatient called:', patientId, patientName);
+             if (confirm(`Remove ${patientName} from queue?`)) {
+                 allPatients = allPatients.filter(p => p.id != patientId);
+                 console.log('Patient removed, remaining patients:', allPatients.length);
+                 savePatients();
+                 
+                 // Broadcast update with error handling
+                 if (window.broadcastQueueUpdate) {
+                     window.broadcastQueueUpdate();
+                 } else {
+                     console.warn('broadcastQueueUpdate not available');
+                 }
+                 
+                 loadAndDisplayQueues();
             }
         }
 
