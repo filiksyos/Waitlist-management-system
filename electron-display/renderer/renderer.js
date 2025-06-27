@@ -5,11 +5,13 @@ class QueueDisplay {
   constructor() {
     this.patients = [];
     this.doctorCount = 1; // Default to 1 doctor
+    this.maxPatientsDisplayed = 10; // Default to 10 patients
     
     this.initializeElements();
     this.setupIPC();
     this.loadInitialData();
     this.setupWebSocketIntegration();
+    this.updateDynamicStyles(); // Initialize default styles
   }
 
   initializeElements() {
@@ -26,6 +28,20 @@ class QueueDisplay {
         this.setupDoctorDisplay();
         this.cleanupInvalidPatients();
         this.renderQueue(this.patients);
+      });
+
+      // Listen for max patients configuration from main process
+      ipcRenderer.on('max-patients-config', (event, maxPatients) => {
+        console.log('Max patients configuration received:', maxPatients);
+        const previousValue = this.maxPatientsDisplayed;
+        this.maxPatientsDisplayed = maxPatients;
+        
+        // Only update styles and re-render if value actually changed
+        if (previousValue !== maxPatients) {
+          this.updateDynamicStyles();
+          this.renderQueue(this.patients);
+          console.log(`Dynamic styles updated for ${maxPatients} patients`);
+        }
       });
 
       // Listen for display status updates
@@ -126,8 +142,8 @@ class QueueDisplay {
     queueList.style.display = 'flex';
     emptyState.style.display = 'none';
     
-    // Limit to 10 patients maximum
-    const displayPatients = sortedPatients.slice(0, 10);
+    // Limit to configured maximum patients
+    const displayPatients = sortedPatients.slice(0, this.maxPatientsDisplayed);
     
     displayPatients.forEach((patient, idx) => {
       const queueItem = document.createElement('div');
@@ -205,6 +221,45 @@ class QueueDisplay {
           console.error('Error updating localStorage:', error);
         }
       }
+    }
+  }
+
+  updateDynamicStyles() {
+    try {
+      // Calculate dynamic heights and sizes
+      const itemHeightVh = 85 / this.maxPatientsDisplayed;
+      const baseTextScale = itemHeightVh / 8.5; // 8.5vh is original item height
+      
+      // Apply constraints to text scaling for readability
+      const textScale = Math.min(1.5, Math.max(0.5, baseTextScale));
+      
+      // Calculate font sizes based on original values
+      const patientNameSize = 5 * textScale; // 5em is original
+      const badgeSize = 3.5 * textScale; // 3.5em is original
+      
+      // Create CSS with custom properties
+      const dynamicCSS = `
+        :root {
+          --queue-item-height: ${itemHeightVh}vh;
+          --patient-name-size: ${patientNameSize}em;
+          --position-badge-size: ${badgeSize}em;
+        }
+      `;
+      
+      // Apply styles to document
+      let styleElement = document.getElementById('dynamic-patient-styles');
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'dynamic-patient-styles';
+        document.head.appendChild(styleElement);
+      }
+      
+      styleElement.innerHTML = dynamicCSS;
+      
+      console.log(`Dynamic styles applied - Items: ${this.maxPatientsDisplayed}, Height: ${itemHeightVh.toFixed(1)}vh, Text scale: ${textScale.toFixed(2)}`);
+      
+    } catch (error) {
+      console.error('Error updating dynamic styles:', error);
     }
   }
 }

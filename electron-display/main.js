@@ -15,6 +15,21 @@ function getDoctorCount() {
   return parseInt(count) === 2 ? 2 : 1;
 }
 
+// Max patients displayed management
+function getMaxPatientsDisplayed() {
+  const maxPatients = process.env.MAX_PATIENTS_DISPLAYED || '10';
+  const parsed = parseInt(maxPatients);
+  
+  // Validate range: minimum 1, maximum 20 (practical limits)
+  if (isNaN(parsed) || parsed < 1 || parsed > 20) {
+    console.warn(`Invalid MAX_PATIENTS_DISPLAYED value: ${maxPatients}. Using default: 10`);
+    return 10;
+  }
+  
+  console.log(`Max patients displayed configured: ${parsed}`);
+  return parsed;
+}
+
 function createWindow() {
   // Initialize display manager
   displayManager = new DisplayManager();
@@ -108,6 +123,10 @@ function createWindow() {
     // Send doctor count to renderer
     const doctorCount = getDoctorCount();
     mainWindow.webContents.send('doctor-count-config', doctorCount);
+    
+    // Send max patients configuration to renderer
+    const maxPatientsDisplayed = getMaxPatientsDisplayed();
+    mainWindow.webContents.send('max-patients-config', maxPatientsDisplayed);
   });
 
   // Open DevTools in development

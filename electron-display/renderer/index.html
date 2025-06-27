@@ -11,6 +11,13 @@
       box-sizing: border-box;
     }
     
+    :root {
+      /* Default CSS custom properties for dynamic sizing */
+      --queue-item-height: 8.5vh;
+      --patient-name-size: 5em;
+      --position-badge-size: 3.5em;
+    }
+    
     body {
       font-family: Arial, sans-serif;
       background: #000000;
@@ -60,12 +67,13 @@
     }
     
     .queue-item {
-      height: 8.5vh;
+      height: var(--queue-item-height);
       display: flex;
       align-items: center;
       padding: 0 10px;
       border-bottom: 1px solid #333333;
       position: relative;
+      transition: all 0.3s ease-in-out;
     }
     
     .queue-item:last-child {
@@ -81,15 +89,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 3.5em;
+      font-size: var(--position-badge-size);
       font-weight: 900;
       margin-right: 20px;
       flex-shrink: 0;
       box-shadow: 0 0 10px rgba(255, 23, 68, 0.5);
+      transition: all 0.3s ease-in-out;
     }
     
     .patient-name {
-      font-size: 5em;
+      font-size: var(--patient-name-size);
       font-weight: 900;
       color: #FFFFFF;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
@@ -97,6 +106,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       flex: 1;
+      transition: all 0.3s ease-in-out;
     }
     
     .empty-state {
