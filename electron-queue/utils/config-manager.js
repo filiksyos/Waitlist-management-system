@@ -8,7 +8,8 @@ class ConfigManager {
     this.defaultConfig = {
       serverUrl: '192.168.1.11:8080',
       autoReconnect: true,
-      reconnectInterval: 2000
+      reconnectInterval: 2000,
+      enableAmharicInput: false
     };
   }
 
@@ -91,6 +92,10 @@ class ConfigManager {
 
       if (typeof config.reconnectInterval !== 'number' || config.reconnectInterval < 1000) {
         return { valid: false, error: 'reconnectInterval must be a number >= 1000' };
+      }
+
+      if (typeof config.enableAmharicInput !== 'boolean') {
+        return { valid: false, error: 'enableAmharicInput must be a boolean' };
       }
 
       return { valid: true };

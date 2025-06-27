@@ -19,6 +19,7 @@ class SettingsManager {
     this.serverUrlInput = document.getElementById('serverUrl');
     this.autoReconnectInput = document.getElementById('autoReconnect');
     this.reconnectIntervalInput = document.getElementById('reconnectInterval');
+    this.enableAmharicInput = document.getElementById('enableAmharicInput');
     
     // Status elements
     this.statusLight = document.getElementById('statusLight');
@@ -57,6 +58,7 @@ class SettingsManager {
     this.serverUrlInput.value = config.serverUrl || '192.168.1.11:8080';
     this.autoReconnectInput.checked = config.autoReconnect !== false;
     this.reconnectIntervalInput.value = config.reconnectInterval || 2000;
+    this.enableAmharicInput.checked = config.enableAmharicInput || false;
   }
 
   bindEvents() {
@@ -147,7 +149,8 @@ class SettingsManager {
     return {
       serverUrl: '192.168.1.11:8080',
       autoReconnect: true,
-      reconnectInterval: 2000
+      reconnectInterval: 2000,
+      enableAmharicInput: false
     };
   }
 
@@ -256,7 +259,8 @@ class SettingsManager {
     return {
       serverUrl: this.serverUrlInput.value.trim(),
       autoReconnect: this.autoReconnectInput.checked,
-      reconnectInterval: parseInt(this.reconnectIntervalInput.value)
+      reconnectInterval: parseInt(this.reconnectIntervalInput.value),
+      enableAmharicInput: this.enableAmharicInput.checked
     };
   }
 

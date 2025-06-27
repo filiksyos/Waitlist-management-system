@@ -8,6 +8,8 @@ class QueueManager {
     this.allPatients = [];
     this.currentConfig = null;
     this.reconnectTimer = null;
+    this.amharicEnabled = false;
+    this.sleeboardInstance = null;
     
     this.initializeElements();
     this.loadConfiguration();
@@ -52,7 +54,8 @@ class QueueManager {
     return {
       serverUrl: '192.168.1.11:8080',
       autoReconnect: true,
-      reconnectInterval: 2000
+      reconnectInterval: 2000,
+      enableAmharicInput: false
     };
   }
 
@@ -80,6 +83,7 @@ class QueueManager {
     try {
       this.currentConfig = this.loadConfig();
       this.updateServerUrlDisplay(this.currentConfig.serverUrl);
+      this.initializeAmharicInput();
       console.log('Configuration loaded:', this.currentConfig);
     } catch (error) {
       console.error('Error loading configuration:', error);
@@ -126,6 +130,7 @@ class QueueManager {
         console.log('Settings updated, reloading configuration');
         this.currentConfig = newConfig;
         this.updateServerUrlDisplay(newConfig.serverUrl);
+        this.toggleAmharicInput(newConfig.enableAmharicInput);
         this.connectToServer();
       });
     } catch (error) {
@@ -136,6 +141,57 @@ class QueueManager {
     setTimeout(() => {
       this.connectToServer();
     }, 500);
+  }
+
+  // Amharic Input Management
+  initializeAmharicInput() {
+    if (this.currentConfig && this.currentConfig.enableAmharicInput) {
+      this.toggleAmharicInput(true);
+    }
+  }
+
+  toggleAmharicInput(enabled) {
+    this.amharicEnabled = enabled;
+    
+    if (enabled) {
+      try {
+        // Initialize Sleeboard if available
+        if (typeof sleeboard !== 'undefined') {
+          this.sleeboardInstance = sleeboard('#patientName');
+          console.log('Amharic input enabled for patient name field');
+        } else {
+          console.warn('Sleeboard library not available');
+        }
+      } catch (error) {
+        console.error('Error initializing Amharic input:', error);
+      }
+    } else {
+      try {
+        // Disable Sleeboard if instance exists
+        if (this.sleeboardInstance) {
+          this.sleeboardInstance.disable('#patientName');
+          console.log('Amharic input disabled for patient name field');
+        }
+      } catch (error) {
+        console.error('Error disabling Amharic input:', error);
+      }
+    }
+    
+    this.updateAmharicStatus();
+  }
+
+  updateAmharicStatus() {
+    // Optional: Add visual indicators for Amharic mode
+    const patientNameInput = document.getElementById('patientName');
+    if (patientNameInput) {
+      if (this.amharicEnabled) {
+        patientNameInput.setAttribute('data-amharic-enabled', 'true');
+        patientNameInput.title = 'Amharic input enabled - type to automatically transliterate';
+      } else {
+        patientNameInput.removeAttribute('data-amharic-enabled');
+        patientNameInput.title = '';
+      }
+    }
   }
 
   connectToServer() {

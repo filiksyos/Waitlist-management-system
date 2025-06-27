@@ -5,7 +5,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Nyala', 'Abyssinica SIL', sans-serif;
     background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
     color: #ffffff;
     height: 100vh;
@@ -147,6 +147,7 @@ h1 {
     background: #3a3a3a;
     color: #fff;
     font-size: 0.95em;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Nyala', 'Abyssinica SIL', sans-serif;
     transition: all 0.3s ease;
 }
 
@@ -158,6 +159,15 @@ h1 {
 
 .form-row input[type="text"]::placeholder {
     color: #999;
+}
+
+/* Amharic input indicator */
+.form-row input[type="text"][data-amharic-enabled="true"] {
+    border-left: 4px solid #4CAF50;
+}
+
+.form-row input[type="text"][data-amharic-enabled="true"]:focus {
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3), inset 2px 0 0 #4CAF50;
 }
 
 .doctor-options {
@@ -248,6 +258,7 @@ button:active {
     flex: 1;
     font-weight: bold;
     color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Nyala', 'Abyssinica SIL', sans-serif;
 }
 
 .patient-row button {
