@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Manager - Mebrej Clinic</title>
+    <link rel="stylesheet" href="queue-manager.css">
+</head>
+<body>
+    <!-- Top Status Bar -->
+    <div class="status-bar">
+        <div class="connection-status" id="connectionStatus">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span id="statusText">Disconnected</span>
+            <span id="serverUrl" class="server-url">No server configured</span>
+        </div>
+        
+        <div class="status-actions">
+            <button id="settingsBtn" class="btn-icon" title="Settings (Ctrl+,)">
+                ⚙️
+            </button>
+            <button id="reconnectBtn" class="btn-icon" title="Reconnect" style="display: none;">
+                🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="role-badge">📋 Queue Manager Interface</div>
+        <h1>Queue Manager - Patient Queue Control</h1>
+        
+        <!-- Add Patient Form -->
+        <div class="add-patient-form">
+            <h3>Add New Patient</h3>
+            <form id="addPatientForm">
+                <div class="form-row">
+                    <label for="patientName">Patient Name:</label>
+                    <input type="text" id="patientName" name="patientName" required>
+                    
+                    <label>Doctor:</label>
+                    <div class="doctor-options">
+                        <label class="radio-label">
+                            <input type="radio" name="doctorSelection" value="doctor1" required>
+                            Doctor 1
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="doctorSelection" value="doctor2" required>
+                            Doctor 2
+                        </label>
+                    </div>
+                    
+                    <button type="submit">Add Patient</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Queue Display -->
+        <div class="queue-container">
+            <div class="doctor-section">
+                <h3>Doctor 1 Queue</h3>
+                <div id="doctor1Queue">
+                    <!-- Doctor 1 patients will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="doctor-section">
+                <h3>Doctor 2 Queue</h3>
+                <div id="doctor2Queue">
+                    <!-- Doctor 2 patients will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Error Overlay -->
+    <div class="connection-overlay" id="connectionOverlay" style="display: none;">
+        <div class="overlay-content">
+            <div class="overlay-icon">⚠️</div>
+            <h2>Connection Required</h2>
+            <p>Please configure and connect to a server to manage the queue.</p>
+            <div class="overlay-actions">
+                <button id="openSettingsBtn" class="btn btn-primary">Open Settings</button>
+                <button id="retryConnectionBtn" class="btn btn-secondary">Retry Connection</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="queue-manager.js"></script>
+</body>
+</html>

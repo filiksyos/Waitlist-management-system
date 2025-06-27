@@ -26,6 +26,20 @@ Thumbs.db
 /build/
 /coverage/
 
+# Electron build output (comprehensive)
+/electron-queue/dist/
+/electron-queue/build/
+/electron-display/dist/
+/electron-display/build/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.snap
+builder-debug.yml
+builder-effective-config.yaml
+
 # Misc
 *.log
 
