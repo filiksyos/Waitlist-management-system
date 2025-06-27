@@ -1,12 +1,19 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { app, BrowserWindow, dialog } = require('electron');
 app.disableHardwareAcceleration();
-const path = require('path');
 const DisplayManager = require('./utils/display-manager');
 
 // Global instances
 let mainWindow = null;
 let displayManager = null;
 const isDevelopment = process.argv.includes('--dev');
+
+// Doctor count management
+function getDoctorCount() {
+  const count = process.env.DOCTOR_COUNT || '1';
+  return parseInt(count) === 2 ? 2 : 1;
+}
 
 function createWindow() {
   // Initialize display manager
@@ -97,6 +104,10 @@ function createWindow() {
       hdmiConnected: isTVAvailable,
       displayInfo: displayInfo
     });
+    
+    // Send doctor count to renderer
+    const doctorCount = getDoctorCount();
+    mainWindow.webContents.send('doctor-count-config', doctorCount);
   });
 
   // Open DevTools in development

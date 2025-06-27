@@ -4,8 +4,10 @@ const WebSocket = require('ws');
 class QueueDisplay {
   constructor() {
     this.patients = [];
+    this.doctorCount = 1; // Default to 1 doctor
     
     this.initializeElements();
+    this.setupIPC();
     this.loadInitialData();
     this.setupWebSocketIntegration();
   }
@@ -13,6 +15,26 @@ class QueueDisplay {
   initializeElements() {
     this.statusIndicator = document.getElementById('statusIndicator');
     this.statusText = document.getElementById('statusText');
+  }
+
+  setupIPC() {
+    try {
+      // Listen for doctor count configuration from main process
+      ipcRenderer.on('doctor-count-config', (event, doctorCount) => {
+        console.log('Doctor count configuration received:', doctorCount);
+        this.doctorCount = doctorCount;
+        this.setupDoctorDisplay();
+        this.cleanupInvalidPatients();
+        this.renderQueue(this.patients);
+      });
+
+      // Listen for display status updates
+      ipcRenderer.on('display-status', (event, status) => {
+        console.log('Display status received:', status);
+      });
+    } catch (error) {
+      console.warn('IPC not available:', error);
+    }
   }
 
   loadInitialData() {
@@ -125,17 +147,65 @@ class QueueDisplay {
     });
   }
 
-  // Main function to render both doctor queues
+  // Main function to render doctor queues based on doctor count
   renderQueue(patients) {
     if (!patients || !Array.isArray(patients)) {
       patients = [];
     }
     
-    // Render both doctor queues
-    this.renderDoctorQueue(patients, 'doctor1');
-    this.renderDoctorQueue(patients, 'doctor2');
+    // Store patients for later use
+    this.patients = patients;
+    
+    if (this.doctorCount === 1) {
+      // Single doctor mode - only render doctor1
+      this.renderDoctorQueue(patients, 'doctor1');
+    } else {
+      // Multi doctor mode - render both doctors
+      this.renderDoctorQueue(patients, 'doctor1');
+      this.renderDoctorQueue(patients, 'doctor2');
+    }
     
     console.log('Queue rendered with', patients.length, 'total patients');
+  }
+
+  setupDoctorDisplay() {
+    const doctor2Section = document.querySelector('.queue-section:nth-child(2)');
+    
+    if (this.doctorCount === 1) {
+      // Hide doctor 2 section
+      if (doctor2Section) {
+        doctor2Section.style.display = 'none';
+      }
+      
+      document.body.classList.add('single-doctor-mode');
+      document.body.classList.remove('multi-doctor-mode');
+    } else {
+      // Show doctor 2 section
+      if (doctor2Section) {
+        doctor2Section.style.display = 'block';
+      }
+      
+      document.body.classList.add('multi-doctor-mode');
+      document.body.classList.remove('single-doctor-mode');
+    }
+  }
+
+  cleanupInvalidPatients() {
+    if (this.doctorCount === 1) {
+      // Filter out doctor2 patients
+      const originalLength = this.patients.length;
+      this.patients = this.patients.filter(patient => patient.doctorId === 'doctor1');
+      
+      if (this.patients.length !== originalLength) {
+        console.log(`Filtered out ${originalLength - this.patients.length} doctor2 patients due to single doctor mode`);
+        // Update localStorage to reflect the filtered data
+        try {
+          localStorage.setItem('patients', JSON.stringify(this.patients));
+        } catch (error) {
+          console.error('Error updating localStorage:', error);
+        }
+      }
+    }
   }
 }
 

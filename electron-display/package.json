@@ -12,6 +12,7 @@
     "dist": "electron-builder --publish=never"
   },
   "dependencies": {
+    "dotenv": "^16.6.0",
     "ws": "^8.13.0"
   },
   "devDependencies": {
@@ -28,7 +29,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -46,4 +49,4 @@
       "package.json"
     ]
   }
-} 
+}

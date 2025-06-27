@@ -10,6 +10,7 @@ class QueueManager {
     this.reconnectTimer = null;
     this.amharicEnabled = false;
     this.sleeboardInstance = null;
+    this.doctorCount = 1; // Default to 1 doctor
     
     this.initializeElements();
     this.loadConfiguration();
@@ -132,6 +133,15 @@ class QueueManager {
         this.updateServerUrlDisplay(newConfig.serverUrl);
         this.toggleAmharicInput(newConfig.enableAmharicInput);
         this.connectToServer();
+      });
+
+      // Listen for doctor count configuration from main process
+      ipcRenderer.on('doctor-count-config', (event, doctorCount) => {
+        console.log('Doctor count configuration received:', doctorCount);
+        this.doctorCount = doctorCount;
+        this.setupDoctorUI();
+        this.cleanupInvalidPatients();
+        this.renderQueues();
       });
     } catch (error) {
       console.warn('IPC not available:', error);
@@ -546,6 +556,68 @@ class QueueManager {
       console.log('Broadcasted queue update to all clients');
     } else {
       console.log('WebSocket not ready for broadcast');
+    }
+  }
+
+  setupDoctorUI() {
+    const doctorSelectionDiv = document.querySelector('.doctor-options');
+    const doctor2Section = document.querySelector('.doctor-section:nth-child(2)');
+    
+    if (this.doctorCount === 1) {
+      // Hide doctor selection UI
+      if (doctorSelectionDiv) {
+        doctorSelectionDiv.style.display = 'none';
+      }
+      
+      // Hide doctor 2 queue section
+      if (doctor2Section) {
+        doctor2Section.style.display = 'none';
+      }
+      
+      // Auto-select doctor1
+      const doctor1Radio = document.querySelector('input[value="doctor1"]');
+      if (doctor1Radio) {
+        doctor1Radio.checked = true;
+      }
+      
+      document.body.classList.add('single-doctor-mode');
+      document.body.classList.remove('multi-doctor-mode');
+    } else {
+      // Show doctor selection UI
+      if (doctorSelectionDiv) {
+        doctorSelectionDiv.style.display = 'flex';
+      }
+      
+      // Show doctor 2 queue section
+      if (doctor2Section) {
+        doctor2Section.style.display = 'block';
+      }
+      
+      document.body.classList.add('multi-doctor-mode');
+      document.body.classList.remove('single-doctor-mode');
+    }
+  }
+
+  cleanupInvalidPatients() {
+    if (this.doctorCount === 1) {
+      // Remove all doctor2 patients
+      const originalLength = this.allPatients.length;
+      this.allPatients = this.allPatients.filter(patient => patient.doctorId === 'doctor1');
+      
+      if (this.allPatients.length !== originalLength) {
+        console.log(`Removed ${originalLength - this.allPatients.length} doctor2 patients due to single doctor mode`);
+        this.savePatients();
+        this.broadcastUpdate();
+      }
+    }
+  }
+
+  renderQueues() {
+    if (this.doctorCount === 1) {
+      this.renderDoctorQueue('doctor1');
+    } else {
+      this.renderDoctorQueue('doctor1');
+      this.renderDoctorQueue('doctor2');
     }
   }
 }

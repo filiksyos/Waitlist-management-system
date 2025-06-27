@@ -163,9 +163,19 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
+    
+    /* Conditional display styles for doctor count */
+    .single-doctor-mode .split-container {
+      grid-template-columns: 1fr;
+    }
+    
+    .single-doctor-mode .doctor-section:nth-child(3),
+    .single-doctor-mode .divider {
+      display: none !important;
+    }
   </style>
 </head>
-<body>
+<body class="multi-doctor-mode">
   <div class="connection-status" id="connectionStatus">
     <div class="status-indicator" id="statusIndicator"></div>
     <span id="statusText">Connecting...</span>

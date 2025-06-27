@@ -2,12 +2,63 @@
 
 A real-time clinic waitlist management system designed for **multi-doctor** environments with instant queue updates across all interfaces.
 
+## Configuration
+
+### Doctor Count Setup
+
+Configure the number of doctors using the `.env` file in the root directory:
+
+```bash
+# Set to 1 for single doctor mode (default)
+DOCTOR_COUNT=1
+
+# Set to 2 for two doctor mode
+DOCTOR_COUNT=2
+```
+
+**Single Doctor Mode (DOCTOR_COUNT=1):**
+- Auto-selects Doctor 1
+- Hides doctor selection UI
+- Shows only one queue section
+- Removes any Doctor 2 patient data
+
+**Two Doctor Mode (DOCTOR_COUNT=2):**
+- Shows doctor selection dropdown
+- Displays both doctor queues
+- Full multi-doctor functionality
+
+**Note:** Changes take effect only after restarting the server and applications.
+
+## Installation
+
+```bash
+pnpm install
+```
+
+## Usage
+
+1. Start the WebSocket server:
+```bash
+node server.js
+```
+
+2. Open interfaces in browser:
+- Receptionist: `http://localhost:8080/Receptionist.html`
+- Doctor: `http://localhost:8080/Doctor.html`
+- Queue Display: `http://localhost:8080/display.html`
+
+Or use the Electron apps:
+- Queue Manager: `cd electron-queue && npm start`
+- Display: `cd electron-display && npm start`
+
 ## Features
 
 - **Multi-Doctor Support**: Separate queues for Doctor 1 and Doctor 2
 - **Real-time Updates**: WebSocket-based instant synchronization
 - **Role-based Interfaces**: Receptionist, Doctor, and Public Display views
 - **Queue Management**: FIFO patient ordering with doctor assignment
+- **Configurable Single/Multi-Doctor Support**: Automatically handles switching between modes
+- **Automatic Patient Data Cleanup**: Removes data when switching between modes
 
 ## System Roles
 

@@ -1,9 +1,16 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
 
 let mainWindow = null;
 let settingsWindow = null;
 const isDevelopment = process.argv.includes('--dev');
+
+// Doctor count management
+function getDoctorCount() {
+  const count = process.env.DOCTOR_COUNT || '1';
+  return parseInt(count) === 2 ? 2 : 1;
+}
 
 function createMainWindow() {
   // Create the main queue manager window
@@ -25,6 +32,10 @@ function createMainWindow() {
   // Show window when ready
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    
+    // Send doctor count to renderer
+    const doctorCount = getDoctorCount();
+    mainWindow.webContents.send('doctor-count-config', doctorCount);
     
     if (isDevelopment) {
       mainWindow.webContents.openDevTools();

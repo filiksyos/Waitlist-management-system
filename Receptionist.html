@@ -147,10 +147,15 @@ td:first-child {
   margin-top: 5px;
   font-weight: bold;
 }
+
+/* Conditional display styles for doctor count */
+.single-doctor-mode .doctor-selection {
+  display: none !important;
+}
  
 </style>
 </head>
-<body>
+<body class="multi-doctor-mode">
 
 <form id="patientForm" onsubmit="saveFormData(event)">
  <h3>መብረጅ ስፔሻሊቲ የቆዳ ክሊኒክ</br>
@@ -233,27 +238,139 @@ td:first-child {
 
 <script src="client.js"></script>
 <script>
-  // Set today's date by default
-  document.addEventListener('DOMContentLoaded', function() {
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    document.getElementById('date').value = formattedDate;
+  // Global variables
+  let doctorCount = 1; // Default to 1 doctor
+
+  // Shared utility functions
+  async function fetchDoctorCount() {
+    try {
+      const response = await fetch('/api/config');
+      const config = await response.json();
+      return parseInt(config.doctorCount) || 1;
+    } catch (error) {
+      console.warn('Failed to fetch doctor count, defaulting to 1');
+      return 1;
+    }
+  }
+
+  function filterPatientsByDoctorCount(patients, doctorCount) {
+    if (doctorCount === 1) {
+      return patients.filter(p => p.doctorId === 'doctor1');
+    }
+    return patients; // Return all when doctorCount === 2
+  }
+
+  function setupDoctorSelection() {
+    const doctorSelectionDiv = document.querySelector('.doctor-selection');
+    const doctor1Radio = document.getElementById('doctor1');
+    const doctor2Radio = document.getElementById('doctor2');
+    
+    if (doctorCount === 1) {
+      // Hide doctor selection UI
+      if (doctorSelectionDiv) {
+        doctorSelectionDiv.style.display = 'none';
+      }
+      
+      // Auto-select doctor1
+      if (doctor1Radio) {
+        doctor1Radio.checked = true;
+        doctor1Radio.required = false; // Remove required since it's auto-selected
+      }
+      
+      document.body.classList.add('single-doctor-mode');
+      document.body.classList.remove('multi-doctor-mode');
+    } else {
+      // Show doctor selection UI
+      if (doctorSelectionDiv) {
+        doctorSelectionDiv.style.display = 'block';
+      }
+      
+      // Restore required attribute
+      if (doctor1Radio) {
+        doctor1Radio.required = true;
+      }
+      if (doctor2Radio) {
+        doctor2Radio.required = true;
+      }
+      
+      document.body.classList.add('multi-doctor-mode');
+      document.body.classList.remove('single-doctor-mode');
+    }
+  }
+
+  function cleanupInvalidPatients() {
+    if (doctorCount === 1) {
+      try {
+        const storedPatients = localStorage.getItem('patients');
+        if (storedPatients) {
+          let patients = JSON.parse(storedPatients);
+          const originalLength = patients.length;
+          patients = patients.filter(patient => patient.doctorId === 'doctor1');
+          
+          if (patients.length !== originalLength) {
+            localStorage.setItem('patients', JSON.stringify(patients));
+            console.log(`Removed ${originalLength - patients.length} doctor2 patients due to single doctor mode`);
+          }
+        }
+      } catch (e) {
+        console.error('Error cleaning up patient data:', e);
+      }
+    }
+  }
+
+  // Set today's date by default and initialize doctor count
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      // Fetch doctor count configuration
+      doctorCount = await fetchDoctorCount();
+      console.log('Doctor count configured:', doctorCount);
+      
+      // Setup doctor selection UI
+      setupDoctorSelection();
+      
+      // Cleanup invalid patients
+      cleanupInvalidPatients();
+      
+      // Set today's date
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      document.getElementById('date').value = formattedDate;
+    } catch (error) {
+      console.error('Error during initialization:', error);
+      // Fallback to default behavior
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0];
+      document.getElementById('date').value = formattedDate;
+    }
   });
 
   // Function to save form data to localStorage and print
   function saveFormData(event) {
     event.preventDefault(); // Prevent form submission
     
-    // Validate doctor selection
-    const doctorSelection = document.querySelector('input[name="doctorSelection"]:checked');
+    // Validate doctor selection (skip validation in single doctor mode)
+    let doctorSelection = document.querySelector('input[name="doctorSelection"]:checked');
     const doctorError = document.getElementById('doctorError');
     
-    if (!doctorSelection) {
-      doctorError.style.display = 'block';
-      doctorError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return false; // Prevent form submission
-    } else {
+    if (doctorCount === 1) {
+      // In single doctor mode, force selection to doctor1 if not already selected
+      if (!doctorSelection) {
+        const doctor1Radio = document.getElementById('doctor1');
+        if (doctor1Radio) {
+          doctor1Radio.checked = true;
+          doctorSelection = doctor1Radio;
+        }
+      }
       doctorError.style.display = 'none';
+    } else {
+      // In multi-doctor mode, require selection
+      if (!doctorSelection) {
+        doctorError.style.display = 'block';
+        doctorError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false; // Prevent form submission
+      } else {
+        doctorError.style.display = 'none';
+      }
     }
     
     // Get form data

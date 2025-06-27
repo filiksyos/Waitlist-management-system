@@ -127,9 +127,19 @@
       height: 100vh;
       box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
     }
+    
+    /* Conditional display styles for doctor count */
+    .single-doctor-mode .split-container {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .single-doctor-mode .doctor-section:nth-child(3),
+    .single-doctor-mode .divider {
+      display: none !important;
+    }
   </style>
 </head>
-<body>
+<body class="multi-doctor-mode">
   <div class="split-container">
     <!-- Doctor 1 Section -->
     <div class="doctor-section">
@@ -165,6 +175,88 @@
   
   <script src="client.js"></script>
   <script>
+    // Global variables
+    let doctorCount = 1; // Default to 1 doctor
+
+    // Shared utility functions
+    async function fetchDoctorCount() {
+      try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        return parseInt(config.doctorCount) || 1;
+      } catch (error) {
+        console.warn('Failed to fetch doctor count, defaulting to 1');
+        return 1;
+      }
+    }
+
+    function filterPatientsByDoctorCount(patients, doctorCount) {
+      if (doctorCount === 1) {
+        return patients.filter(p => p.doctorId === 'doctor1');
+      }
+      return patients; // Return all when doctorCount === 2
+    }
+
+    function setupDoctorDisplay() {
+      const splitContainer = document.querySelector('.split-container');
+      const doctor2Section = document.querySelector('.doctor-section:nth-child(3)');
+      const divider = document.querySelector('.divider');
+      
+      if (doctorCount === 1) {
+        // Hide doctor 2 section and divider
+        if (doctor2Section) {
+          doctor2Section.style.display = 'none';
+        }
+        if (divider) {
+          divider.style.display = 'none';
+        }
+        
+        // Change grid layout to single column
+        if (splitContainer) {
+          splitContainer.style.gridTemplateColumns = '1fr';
+        }
+        
+        document.body.classList.add('single-doctor-mode');
+        document.body.classList.remove('multi-doctor-mode');
+      } else {
+        // Show doctor 2 section and divider
+        if (doctor2Section) {
+          doctor2Section.style.display = 'flex';
+        }
+        if (divider) {
+          divider.style.display = 'block';
+        }
+        
+        // Restore grid layout to three columns
+        if (splitContainer) {
+          splitContainer.style.gridTemplateColumns = '1fr 8px 1fr';
+        }
+        
+        document.body.classList.add('multi-doctor-mode');
+        document.body.classList.remove('single-doctor-mode');
+      }
+    }
+
+    function cleanupInvalidPatients() {
+      if (doctorCount === 1) {
+        try {
+          const storedPatients = localStorage.getItem('patients');
+          if (storedPatients) {
+            let patients = JSON.parse(storedPatients);
+            const originalLength = patients.length;
+            patients = patients.filter(patient => patient.doctorId === 'doctor1');
+            
+            if (patients.length !== originalLength) {
+              localStorage.setItem('patients', JSON.stringify(patients));
+              console.log(`Removed ${originalLength - patients.length} doctor2 patients due to single doctor mode`);
+            }
+          }
+        } catch (e) {
+          console.error('Error cleaning up patient data:', e);
+        }
+      }
+    }
+
     // Create position badge element
     function createPositionBadge(position) {
       const badge = document.createElement('div');
@@ -228,26 +320,66 @@
       });
     }
     
-    // Main function to render both doctor queues
+    // Main function to render doctor queues based on doctor count
     function renderQueue(patients) {
       if (!patients || !Array.isArray(patients)) {
         patients = [];
       }
       
-      // Render both doctor queues
-      renderDoctorQueue(patients, 'doctor1');
-      renderDoctorQueue(patients, 'doctor2');
+      // Filter patients by doctor count
+      patients = filterPatientsByDoctorCount(patients, doctorCount);
+      
+      if (doctorCount === 1) {
+        // Single doctor mode - only render doctor1
+        renderDoctorQueue(patients, 'doctor1');
+      } else {
+        // Multi doctor mode - render both doctors
+        renderDoctorQueue(patients, 'doctor1');
+        renderDoctorQueue(patients, 'doctor2');
+      }
     }
     
-    // Initial render from localStorage (for first load)
-    let patients = [];
-    try {
-      const stored = localStorage.getItem('patients');
-      if (stored) patients = JSON.parse(stored);
-    } catch (e) {
-      console.error('Error loading initial patient data:', e);
+    // Initialize display with doctor count configuration
+    async function initializeDisplay() {
+      try {
+        // Fetch doctor count configuration
+        doctorCount = await fetchDoctorCount();
+        console.log('Doctor count configured:', doctorCount);
+        
+        // Setup display based on doctor count
+        setupDoctorDisplay();
+        
+        // Cleanup invalid patients
+        cleanupInvalidPatients();
+        
+        // Initial render from localStorage (for first load)
+        let patients = [];
+        try {
+          const stored = localStorage.getItem('patients');
+          if (stored) patients = JSON.parse(stored);
+        } catch (e) {
+          console.error('Error loading initial patient data:', e);
+        }
+        renderQueue(patients);
+      } catch (error) {
+        console.error('Error during initialization:', error);
+        // Fallback to default behavior
+        let patients = [];
+        try {
+          const stored = localStorage.getItem('patients');
+          if (stored) patients = JSON.parse(stored);
+        } catch (e) {
+          console.error('Error loading initial patient data:', e);
+        }
+        renderQueue(patients);
+      }
     }
-    renderQueue(patients);
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeDisplay);
+    
+    // Also initialize immediately for compatibility
+    initializeDisplay();
     
     // client.js will call window.renderQueue when updates arrive
     window.renderQueue = renderQueue;

@@ -166,9 +166,18 @@
             font-size: 12px;
             font-weight: bold;
         }
+        
+        /* Conditional display styles for doctor count */
+        .single-doctor-mode .doctor-selection .doctor-options {
+            display: none !important;
+        }
+        
+        .single-doctor-mode .queue-container .doctor-section:nth-child(2) {
+            display: none !important;
+        }
     </style>
 </head>
-<body>
+<body class="multi-doctor-mode">
     <div class="role-badge">📋 Queue Manager Interface</div>
     <h1>Queue Manager - Patient Queue Control</h1>
     
@@ -218,6 +227,100 @@
     <script>
         // Global variables
         let allPatients = [];
+        let doctorCount = 1; // Default to 1 doctor
+
+        // Shared utility functions
+        async function fetchDoctorCount() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                return parseInt(config.doctorCount) || 1;
+            } catch (error) {
+                console.warn('Failed to fetch doctor count, defaulting to 1');
+                return 1;
+            }
+        }
+
+        function filterPatientsByDoctorCount(patients, doctorCount) {
+            if (doctorCount === 1) {
+                return patients.filter(p => p.doctorId === 'doctor1');
+            }
+            return patients; // Return all when doctorCount === 2
+        }
+
+        function setupQueueDisplay() {
+            const queueContainer = document.querySelector('.queue-container');
+            const doctorSelectionDiv = document.querySelector('.doctor-options');
+            const doctor2Section = document.querySelector('.doctor-section:nth-child(2)');
+            
+            if (doctorCount === 1) {
+                // Hide doctor selection UI
+                if (doctorSelectionDiv) {
+                    doctorSelectionDiv.style.display = 'none';
+                }
+                
+                // Hide doctor 2 queue section
+                if (doctor2Section) {
+                    doctor2Section.style.display = 'none';
+                }
+                
+                // Change grid layout to single column
+                if (queueContainer) {
+                    queueContainer.style.gridTemplateColumns = '1fr';
+                }
+                
+                // Auto-select doctor1
+                const doctor1Radio = document.querySelector('input[value="doctor1"]');
+                if (doctor1Radio) {
+                    doctor1Radio.checked = true;
+                    doctor1Radio.required = false;
+                }
+                
+                document.body.classList.add('single-doctor-mode');
+                document.body.classList.remove('multi-doctor-mode');
+            } else {
+                // Show doctor selection UI
+                if (doctorSelectionDiv) {
+                    doctorSelectionDiv.style.display = 'flex';
+                }
+                
+                // Show doctor 2 queue section
+                if (doctor2Section) {
+                    doctor2Section.style.display = 'block';
+                }
+                
+                // Restore grid layout to two columns
+                if (queueContainer) {
+                    queueContainer.style.gridTemplateColumns = '1fr 1fr';
+                }
+                
+                // Restore required attribute
+                const doctor1Radio = document.querySelector('input[value="doctor1"]');
+                const doctor2Radio = document.querySelector('input[value="doctor2"]');
+                if (doctor1Radio) doctor1Radio.required = true;
+                if (doctor2Radio) doctor2Radio.required = true;
+                
+                document.body.classList.add('multi-doctor-mode');
+                document.body.classList.remove('single-doctor-mode');
+            }
+        }
+
+        function cleanupInvalidPatients() {
+            if (doctorCount === 1) {
+                const originalLength = allPatients.length;
+                allPatients = allPatients.filter(patient => patient.doctorId === 'doctor1');
+                
+                if (allPatients.length !== originalLength) {
+                    console.log(`Removed ${originalLength - allPatients.length} doctor2 patients due to single doctor mode`);
+                    savePatients();
+                    
+                    // Broadcast update
+                    if (window.broadcastQueueUpdate) {
+                        window.broadcastQueueUpdate();
+                    }
+                }
+            }
+        }
 
         // Load patients from localStorage
         function loadPatients() {
@@ -276,10 +379,20 @@
             
             const form = event.target;
             const name = form.patientName.value.trim();
-            const doctorId = form.doctorSelection.value;
+            let doctorId = form.doctorSelection.value;
+            
+            // In single doctor mode, auto-assign to doctor1 if not selected
+            if (doctorCount === 1 && !doctorId) {
+                doctorId = 'doctor1';
+            }
             
             if (!name) {
                 alert('Patient name is required');
+                return;
+            }
+            
+            if (!doctorId && doctorCount === 2) {
+                alert('Doctor selection is required');
                 return;
             }
             
@@ -436,15 +549,20 @@
             }
         }
 
-        // Display queues for both doctors
+        // Display queues based on doctor count
         function loadAndDisplayQueues() {
             loadPatients();
+            
+            // Filter patients by doctor count
+            allPatients = filterPatientsByDoctorCount(allPatients, doctorCount);
             
             // Render Doctor 1 queue
             renderDoctorQueue('doctor1');
             
-            // Render Doctor 2 queue
-            renderDoctorQueue('doctor2');
+            // Render Doctor 2 queue only in multi-doctor mode
+            if (doctorCount === 2) {
+                renderDoctorQueue('doctor2');
+            }
         }
 
         // Render individual doctor queue
@@ -488,12 +606,40 @@
         };
 
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            loadAndDisplayQueues();
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Fetch doctor count configuration
+                doctorCount = await fetchDoctorCount();
+                console.log('Doctor count configured:', doctorCount);
+                
+                // Setup queue display based on doctor count
+                setupQueueDisplay();
+                
+                // Cleanup invalid patients
+                cleanupInvalidPatients();
+                
+                // Load and display queues
+                loadAndDisplayQueues();
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                // Fallback to default behavior
+                loadAndDisplayQueues();
+            }
         });
 
-        // Initial load
-        loadAndDisplayQueues();
+        // Initial load (for backward compatibility)
+        setTimeout(async () => {
+            try {
+                if (doctorCount === 1) { // Only run if not already configured
+                    doctorCount = await fetchDoctorCount();
+                    setupQueueDisplay();
+                    cleanupInvalidPatients();
+                    loadAndDisplayQueues();
+                }
+            } catch (error) {
+                console.error('Error in fallback initialization:', error);
+            }
+        }, 100);
     </script>
 </body>
 </html> 

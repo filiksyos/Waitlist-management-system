@@ -123,11 +123,44 @@
 
     <script src="client.js"></script>
     <script>
+        // Global variables
+        let doctorCount = 1; // Default to 1 doctor
+
+        // Shared utility functions
+        async function fetchDoctorCount() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                return parseInt(config.doctorCount) || 1;
+            } catch (error) {
+                console.warn('Failed to fetch doctor count, defaulting to 1');
+                return 1;
+            }
+        }
+
+        function filterPatientsByDoctorCount(patients, doctorCount) {
+            if (doctorCount === 1) {
+                return patients.filter(p => p.doctorId === 'doctor1');
+            }
+            return patients; // Return all when doctorCount === 2
+        }
+
         // Get current doctor ID from URL parameters
         function getCurrentDoctorId() {
             const urlParams = new URLSearchParams(window.location.search);
             const doctorId = urlParams.get('doctor');
             return doctorId || 'doctor1'; // Default to doctor1 if no parameter
+        }
+
+        // Validate doctor access based on doctor count
+        function validateDoctorAccess() {
+            const currentDoctorId = getCurrentDoctorId();
+            if (doctorCount === 1 && currentDoctorId === 'doctor2') {
+                // Redirect doctor2 to doctor1 when in single doctor mode
+                window.location.href = 'Doctor.html?doctor=doctor1';
+                return false;
+            }
+            return true;
         }
 
         // Update page title and header based on doctor ID
@@ -152,9 +185,33 @@
                 console.error('Error loading patient data:', e);
             }
             
+            // Filter patients by doctor count first
+            patients = filterPatientsByDoctorCount(patients, doctorCount);
+            
             // Filter patients by current doctor
             const currentDoctorId = getCurrentDoctorId();
             return patients.filter(patient => patient.doctorId === currentDoctorId);
+        }
+
+        // Function to cleanup invalid patients from localStorage
+        function cleanupInvalidPatients() {
+            if (doctorCount === 1) {
+                try {
+                    const storedPatients = localStorage.getItem('patients');
+                    if (storedPatients) {
+                        let patients = JSON.parse(storedPatients);
+                        const originalLength = patients.length;
+                        patients = patients.filter(patient => patient.doctorId === 'doctor1');
+                        
+                        if (patients.length !== originalLength) {
+                            localStorage.setItem('patients', JSON.stringify(patients));
+                            console.log(`Removed ${originalLength - patients.length} doctor2 patients due to single doctor mode`);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error cleaning up patient data:', e);
+                }
+            }
         }
 
         // Function to sort patients by date of creation (oldest first - FIFO)
@@ -300,15 +357,34 @@
         window.clearAllPatients = clearAllPatients;
 
         // Initialize the display when the page loads
-        window.onload = function() {
-            // Update page for current doctor
-            updatePageForDoctor();
-            
-            displayPatients();
-            
-            // Ensure WebSocket is connected
-            if (typeof connectWebSocket === 'function') {
-                connectWebSocket();
+        window.onload = async function() {
+            try {
+                // Fetch doctor count configuration
+                doctorCount = await fetchDoctorCount();
+                console.log('Doctor count configured:', doctorCount);
+                
+                // Validate doctor access
+                if (!validateDoctorAccess()) {
+                    return; // Exit if redirect occurred
+                }
+                
+                // Cleanup invalid patients
+                cleanupInvalidPatients();
+                
+                // Update page for current doctor
+                updatePageForDoctor();
+                
+                displayPatients();
+                
+                // Ensure WebSocket is connected
+                if (typeof connectWebSocket === 'function') {
+                    connectWebSocket();
+                }
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                // Fallback to default behavior
+                updatePageForDoctor();
+                displayPatients();
             }
         };
     </script>
