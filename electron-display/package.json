@@ -46,7 +46,8 @@
       "client.js",
       "utils/**/*",
       "renderer/**/*",
-      "package.json"
+      "package.json",
+      ".env"
     ]
   }
 }

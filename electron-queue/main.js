@@ -1,5 +1,42 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const fs = require('fs');
+
+// Load .env file - different paths for development vs production
+let envPath;
+const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
+
+console.log('=== DOTENV LOADING DEBUG ===');
+console.log('isDev check:', isDev);
+console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
+console.log('process.argv:', process.argv);
+console.log('__dirname:', __dirname);
+console.log('process.resourcesPath:', process.resourcesPath);
+
+if (isDev) {
+  // Development: .env is in parent directory
+  envPath = path.join(__dirname, '..', '.env');
+} else {
+  // Production: .env is packaged inside the app
+  envPath = path.join(__dirname, '.env');
+}
+
+console.log('Environment:', isDev ? 'development' : 'production');
+console.log('Loading .env from:', envPath);
+console.log('.env exists:', fs.existsSync(envPath));
+
+if (fs.existsSync(envPath)) {
+  console.log('.env file contents preview:', fs.readFileSync(envPath, 'utf8').substring(0, 200));
+}
+
+const dotenvResult = require('dotenv').config({ path: envPath });
+console.log('dotenv.config result:', dotenvResult);
+
+console.log('=== ENVIRONMENT VARIABLES AFTER LOADING ===');
+console.log('DOCTOR_COUNT:', process.env.DOCTOR_COUNT);
+console.log('MAX_PATIENTS_DISPLAYED:', process.env.MAX_PATIENTS_DISPLAYED);
+console.log('DOCTOR_1_NAME:', process.env.DOCTOR_1_NAME);
+console.log('DOCTOR_2_NAME:', process.env.DOCTOR_2_NAME);
+console.log('=== END DEBUG ===');
 const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
 
 let mainWindow = null;

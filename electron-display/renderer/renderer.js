@@ -6,12 +6,17 @@ class QueueDisplay {
     this.patients = [];
     this.doctorCount = 1; // Default to 1 doctor
     this.maxPatientsDisplayed = 10; // Default to 10 patients
+    this.doctorNames = {
+      doctor1Name: 'Doctor 1',
+      doctor2Name: 'Doctor 2'
+    };
     
     this.initializeElements();
     this.setupIPC();
     this.loadInitialData();
     this.setupWebSocketIntegration();
     this.updateDynamicStyles(); // Initialize default styles
+    this.updateDoctorHeaders(); // Initialize with default names
   }
 
   initializeElements() {
@@ -47,6 +52,13 @@ class QueueDisplay {
       // Listen for display status updates
       ipcRenderer.on('display-status', (event, status) => {
         console.log('Display status received:', status);
+      });
+
+      // Listen for doctor names configuration from main process
+      ipcRenderer.on('doctor-names-config', (event, doctorNames) => {
+        console.log('Doctor names configuration received:', doctorNames);
+        this.doctorNames = doctorNames;
+        this.updateDoctorHeaders();
       });
     } catch (error) {
       console.warn('IPC not available:', error);
@@ -195,6 +207,9 @@ class QueueDisplay {
       
       document.body.classList.add('single-doctor-mode');
       document.body.classList.remove('multi-doctor-mode');
+      
+      // Update doctor headers with configured names
+      this.updateDoctorHeaders();
     } else {
       // Show doctor 2 section
       if (doctor2Section) {
@@ -203,7 +218,26 @@ class QueueDisplay {
       
       document.body.classList.add('multi-doctor-mode');
       document.body.classList.remove('single-doctor-mode');
+      
+      // Update doctor headers with configured names
+      this.updateDoctorHeaders();
     }
+  }
+
+  updateDoctorHeaders() {
+    // Update doctor 1 header
+    const doctor1Header = document.querySelector('.doctor-header.doctor1');
+    if (doctor1Header) {
+      doctor1Header.textContent = `${this.doctorNames.doctor1Name} Queue`;
+    }
+    
+    // Update doctor 2 header
+    const doctor2Header = document.querySelector('.doctor-header.doctor2');
+    if (doctor2Header) {
+      doctor2Header.textContent = `${this.doctorNames.doctor2Name} Queue`;
+    }
+    
+    console.log('Doctor headers updated with custom names');
   }
 
   cleanupInvalidPatients() {

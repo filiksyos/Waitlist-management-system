@@ -1,5 +1,43 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const fs = require('fs');
+
+// Load .env file - different paths for development vs production
+let envPath;
+const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
+
+console.log('=== DOTENV LOADING DEBUG ===');
+console.log('isDev check:', isDev);
+console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
+console.log('process.argv:', process.argv);
+console.log('__dirname:', __dirname);
+console.log('process.resourcesPath:', process.resourcesPath);
+
+if (isDev) {
+  // Development: .env is in parent directory
+  envPath = path.join(__dirname, '..', '.env');
+} else {
+  // Production: .env is packaged inside the app
+  envPath = path.join(__dirname, '.env');
+}
+
+console.log('Environment:', isDev ? 'development' : 'production');
+console.log('Loading .env from:', envPath);
+console.log('.env exists:', fs.existsSync(envPath));
+
+if (fs.existsSync(envPath)) {
+  console.log('.env file contents preview:', fs.readFileSync(envPath, 'utf8').substring(0, 200));
+}
+
+const dotenvResult = require('dotenv').config({ path: envPath });
+console.log('dotenv.config result:', dotenvResult);
+
+console.log('=== ENVIRONMENT VARIABLES AFTER LOADING ===');
+console.log('DOCTOR_COUNT:', process.env.DOCTOR_COUNT);
+console.log('MAX_PATIENTS_DISPLAYED:', process.env.MAX_PATIENTS_DISPLAYED);
+console.log('DOCTOR_1_NAME:', process.env.DOCTOR_1_NAME);
+console.log('DOCTOR_2_NAME:', process.env.DOCTOR_2_NAME);
+console.log('=== END DEBUG ===');
+
 const { app, BrowserWindow, dialog } = require('electron');
 app.disableHardwareAcceleration();
 const DisplayManager = require('./utils/display-manager');
@@ -12,22 +50,47 @@ const isDevelopment = process.argv.includes('--dev');
 // Doctor count management
 function getDoctorCount() {
   const count = process.env.DOCTOR_COUNT || '1';
-  return parseInt(count) === 2 ? 2 : 1;
+  console.log('=== getDoctorCount() DEBUG ===');
+  console.log('process.env.DOCTOR_COUNT:', process.env.DOCTOR_COUNT);
+  console.log('count variable:', count);
+  const result = parseInt(count) === 2 ? 2 : 1;
+  console.log('parsed result:', result);
+  console.log('=== END getDoctorCount() DEBUG ===');
+  return result;
 }
 
 // Max patients displayed management
 function getMaxPatientsDisplayed() {
   const maxPatients = process.env.MAX_PATIENTS_DISPLAYED || '10';
+  console.log('=== getMaxPatientsDisplayed() DEBUG ===');
+  console.log('process.env.MAX_PATIENTS_DISPLAYED:', process.env.MAX_PATIENTS_DISPLAYED);
+  console.log('maxPatients variable:', maxPatients);
   const parsed = parseInt(maxPatients);
+  console.log('parsed value:', parsed);
   
   // Validate range: minimum 1, maximum 20 (practical limits)
   if (isNaN(parsed) || parsed < 1 || parsed > 20) {
     console.warn(`Invalid MAX_PATIENTS_DISPLAYED value: ${maxPatients}. Using default: 10`);
+    console.log('=== END getMaxPatientsDisplayed() DEBUG (using default) ===');
     return 10;
   }
   
   console.log(`Max patients displayed configured: ${parsed}`);
+  console.log('=== END getMaxPatientsDisplayed() DEBUG ===');
   return parsed;
+}
+
+// Doctor names management
+function getDoctorNames() {
+  console.log('=== getDoctorNames() DEBUG ===');
+  console.log('process.env.DOCTOR_1_NAME:', process.env.DOCTOR_1_NAME);
+  console.log('process.env.DOCTOR_2_NAME:', process.env.DOCTOR_2_NAME);
+  const doctor1Name = process.env.DOCTOR_1_NAME || 'Doctor 1';
+  const doctor2Name = process.env.DOCTOR_2_NAME || 'Doctor 2';
+  
+  console.log(`Doctor names configured: "${doctor1Name}", "${doctor2Name}"`);
+  console.log('=== END getDoctorNames() DEBUG ===');
+  return { doctor1Name, doctor2Name };
 }
 
 function createWindow() {
@@ -127,6 +190,10 @@ function createWindow() {
     // Send max patients configuration to renderer
     const maxPatientsDisplayed = getMaxPatientsDisplayed();
     mainWindow.webContents.send('max-patients-config', maxPatientsDisplayed);
+    
+    // Send doctor names configuration to renderer
+    const doctorNames = getDoctorNames();
+    mainWindow.webContents.send('doctor-names-config', doctorNames);
   });
 
   // Open DevTools in development
