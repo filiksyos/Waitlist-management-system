@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Waitlist System - Multi-Doctor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%);
+            min-height: 100vh;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4682B4;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+        
+        .role-section {
+            background: white;
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .role-title {
+            font-size: 1.5em;
+            color: #4682B4;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .role-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .interface-button {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: #4682B4;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            min-width: 140px;
+        }
+        
+        .interface-button:hover {
+            background-color: #3a6d99;
+        }
+        
+        .interface-button.receptionist {
+            background-color: #4CAF50;
+        }
+        
+        .interface-button.receptionist:hover {
+            background-color: #3e8e41;
+        }
+        
+        .interface-button.display {
+            background-color: #6C757D;
+        }
+        
+        .interface-button.display:hover {
+            background-color: #545b62;
+        }
+        
+        .status-section {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4682B4;
+            margin-bottom: 30px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-connected {
+            background-color: #4CAF50;
+        }
+        
+        .status-disconnected {
+            background-color: #f44336;
+        }
+        
+        .workflow-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .workflow-title {
+            font-size: 1.3em;
+            color: #4682B4;
+            margin-bottom: 15px;
+        }
+        
+        .workflow-steps {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .workflow-steps li {
+            padding: 8px 0;
+            color: #555;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .workflow-steps li:before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 8px;
+            background: #4682B4;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .workflow-steps {
+            counter-reset: step-counter;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mebrej Clinic Waitlist System</h1>
+    <div class="subtitle">Multi-Doctor Queue Management</div>
+    
+    <div class="status-section">
+        <h3>Server Status</h3>
+        <p>
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="statusText">Checking connection...</span>
+        </p>
+    </div>
+    
+    <div class="role-section">
+        <div class="role-title">👩‍💼 Receptionist Interface</div>
+        <div class="role-description">
+            Register new patients and assign them to Doctor 1 or Doctor 2. Form includes patient information and required doctor selection.
+        </div>
+        <div class="button-container">
+            <a href="Receptionist.html" class="interface-button receptionist">Open Receptionist</a>
+        </div>
+    </div>
+    
+    <div class="role-section">
+        <div class="role-title">👨‍⚕️ Doctor Interfaces</div>
+        <div class="role-description">
+            View and manage patient queues. Each doctor sees only their assigned patients. Remove patients when consultation is complete.
+        </div>
+        <div class="button-container">
+            <a href="Doctor.html?doctor=doctor1" class="interface-button">Doctor 1 Queue</a>
+            <a href="Doctor.html?doctor=doctor2" class="interface-button">Doctor 2 Queue</a>
+        </div>
+    </div>
+    
+    <div class="role-section">
+        <div class="role-title">📺 Public Display</div>
+        <div class="role-description">
+            Split-screen display for the waiting room showing both doctor queues side-by-side with patient names and queue positions.
+        </div>
+        <div class="button-container">
+            <a href="Display.html" class="interface-button display">Open Public Display</a>
+        </div>
+    </div>
+    
+    <div class="workflow-section">
+        <div class="workflow-title">How It Works</div>
+        <ol class="workflow-steps">
+            <li>Receptionist registers patient and selects doctor</li>
+            <li>Patient appears in assigned doctor's queue</li>
+            <li>Public display shows both queues in real-time</li>
+            <li>Doctor removes patient when consultation is done</li>
+            <li>All interfaces update instantly via WebSocket</li>
+        </ol>
+    </div>
+    
+    <script>
+        // Check server connectivity
+        function checkServerStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            fetch('/').then(response => {
+                if (response.ok) {
+                    statusIndicator.className = 'status-indicator status-connected';
+                    statusText.textContent = 'Server running on http://localhost:8080';
+                } else {
+                    throw new Error('Server responded with error');
+                }
+            }).catch(error => {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                statusText.textContent = 'Server not responding - Please start the server';
+                console.error('Server check failed:', error);
+            });
+        }
+        
+        // Check status on page load
+        document.addEventListener('DOMContentLoaded', checkServerStatus);
+        
+        // Check status every 5 seconds
+        setInterval(checkServerStatus, 5000);
+    </script>
+</body>
+</html> 

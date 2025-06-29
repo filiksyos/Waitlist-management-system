@@ -1,7 +1,7 @@
 {
-  "name": "clinic-queue-display",
+  "name": "clinic-queue-manager",
   "version": "1.0.0",
-  "description": "Electron app to display clinic queue",
+  "description": "Electron app for clinic queue management",
   "main": "main.js",
   "author": "Mebrej Clinic",
   "scripts": {
@@ -20,32 +20,30 @@
     "electron-builder": "^24.6.4"
   },
   "build": {
-    "appId": "com.mebrej.clinic-queue-display",
-    "productName": "Clinic Queue Display",
+    "appId": "com.mebrej.clinic-queue-manager",
+    "productName": "Queue Manager",
     "directories": {
       "output": "dist"
     },
     "win": {
       "target": [
         {
-          "target": "nsis",
+          "target": "portable",
           "arch": [
             "x64"
           ]
         }
       ]
     },
-    "nsis": {
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+    "portable": {
+      "requestExecutionLevel": "user"
     },
     "files": [
       "main.js",
-      "client.js",
       "utils/**/*",
+      "settings/**/*",
       "renderer/**/*",
+      "assets/**/*",
       "package.json",
       ".env"
     ]

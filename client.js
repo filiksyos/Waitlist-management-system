@@ -21,6 +21,28 @@ let ws;
 let reconnectTimeout = 2000;
 let isConnected = false;
 
+// Utility function to get current doctor ID from URL parameters
+function getCurrentDoctorId() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const doctorId = urlParams.get('doctor');
+  return doctorId || 'doctor1'; // Default to doctor1 if no parameter
+}
+
+// Utility function to filter patients by doctor ID
+function filterPatientsByDoctor(patients, doctorId) {
+  if (!patients || !Array.isArray(patients)) return [];
+  return patients.filter(patient => patient.doctorId === doctorId);
+}
+
+// Utility function to detect current interface role
+function getCurrentRole() {
+  const filename = window.location.pathname.split('/').pop().toLowerCase();
+  if (filename.includes('receptionist')) return 'receptionist';
+  if (filename.includes('doctor')) return 'doctor';
+  if (filename.includes('display')) return 'display';
+  return 'unknown';
+}
+
 function connectWebSocket() {
   try {
     ws = new WebSocket(WS_SERVER_URL);
@@ -41,7 +63,9 @@ function connectWebSocket() {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ 
         type: 'sync', 
-        patients: patients ? JSON.parse(patients) : [] 
+        patients: patients ? JSON.parse(patients) : [],
+        role: getCurrentRole(),
+        doctorId: getCurrentDoctorId()
       }));
     }
   };
@@ -53,9 +77,23 @@ function connectWebSocket() {
         // Update localStorage
         localStorage.setItem('patients', JSON.stringify(msg.patients));
         
+        const currentRole = getCurrentRole();
+        const currentDoctorId = getCurrentDoctorId();
+        
+        // Filter patients based on current interface role
+        let filteredPatients = msg.patients;
+        if (currentRole === 'doctor') {
+          filteredPatients = filterPatientsByDoctor(msg.patients, currentDoctorId);
+        }
+        
         // Update UI - try all possible render functions
         if (window.renderQueue) {
-          window.renderQueue(msg.patients);
+          if (currentRole === 'display') {
+            // Display interface needs all patients for split screen
+            window.renderQueue(msg.patients);
+          } else {
+            window.renderQueue(filteredPatients);
+          }
         }
         if (typeof displayPatients === 'function') {
           displayPatients();
@@ -88,7 +126,9 @@ function broadcastQueueUpdate() {
     const patients = localStorage.getItem('patients');
     ws.send(JSON.stringify({ 
       type: 'update', 
-      patients: patients ? JSON.parse(patients) : [] 
+      patients: patients ? JSON.parse(patients) : [],
+      role: getCurrentRole(),
+      doctorId: getCurrentDoctorId()
     }));
     console.log('Broadcasted queue update');
   } else {
@@ -141,5 +181,8 @@ window.addEventListener('load', () => {
 // Export for use by other scripts
 window.broadcastQueueUpdate = broadcastQueueUpdate;
 window.connectWebSocket = connectWebSocket;
+window.getCurrentDoctorId = getCurrentDoctorId;
+window.filterPatientsByDoctor = filterPatientsByDoctor;
+window.getCurrentRole = getCurrentRole;
 // Expose WebSocket instance for monitoring
 window.ws = ws; 

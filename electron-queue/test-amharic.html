@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amharic Input Test</title>
+    <script src="assets/sleeboard/sleeboard.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Nyala', 'Abyssinica SIL', sans-serif;
+            background: #2a2a2a;
+            color: white;
+            padding: 20px;
+        }
+        input {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 'Nyala', 'Abyssinica SIL', sans-serif;
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            margin: 10px;
+        }
+        .enabled {
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Amharic Input Test</h1>
+    <p>Type in English and it should automatically convert to Amharic:</p>
+    
+    <input type="text" id="test-input" class="sleeboard" placeholder="Type 'hello' to test...">
+    <br>
+    <button onclick="enableAmharic()">Enable Amharic</button>
+    <button onclick="disableAmharic()">Disable Amharic</button>
+    
+    <script>
+        let amharicInstance = null;
+        
+        function enableAmharic() {
+            if (typeof sleeboard !== 'undefined') {
+                amharicInstance = sleeboard('#test-input');
+                document.getElementById('test-input').classList.add('enabled');
+                console.log('Amharic enabled');
+            } else {
+                console.error('Sleeboard not loaded');
+            }
+        }
+        
+        function disableAmharic() {
+            if (amharicInstance) {
+                amharicInstance.disable('#test-input');
+                document.getElementById('test-input').classList.remove('enabled');
+                console.log('Amharic disabled');
+            }
+        }
+        
+        // Test automatically on load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Sleeboard available:', typeof sleeboard !== 'undefined');
+            enableAmharic();
+        });
+    </script>
+</body>
+</html> 

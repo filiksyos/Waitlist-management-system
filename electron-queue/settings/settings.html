@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Queue Manager</title>
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="settings-container">
+        <div class="settings-header">
+            <h1>🔧 Queue Manager Settings</h1>
+            <p>Configure server connection settings</p>
+        </div>
+
+        <div class="settings-content">
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label for="serverUrl">Server URL:</label>
+                    <input 
+                        type="text" 
+                        id="serverUrl" 
+                        name="serverUrl" 
+                        placeholder="192.168.1.11:8080"
+                        required
+                    >
+                    <small class="help-text">Enter IP address and port (e.g., 192.168.1.11:8080)</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="autoReconnect" name="autoReconnect" checked>
+                        <label for="autoReconnect">Auto-reconnect when connection is lost</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reconnectInterval">Reconnect Interval (ms):</label>
+                    <input 
+                        type="number" 
+                        id="reconnectInterval" 
+                        name="reconnectInterval" 
+                        min="1000" 
+                        max="30000" 
+                        step="500"
+                        value="2000"
+                    >
+                    <small class="help-text">Time between reconnection attempts (1000-30000ms)</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enableAmharicInput" name="enableAmharicInput">
+                        <label for="enableAmharicInput">Enable Amharic Input</label>
+                    </div>
+                    <small class="help-text">Enable automatic transliteration for Amharic text input in patient names</small>
+                </div>
+            </form>
+
+            <div class="connection-status">
+                <div class="status-indicator" id="connectionStatus">
+                    <div class="status-light" id="statusLight"></div>
+                    <span id="statusText">Disconnected</span>
+                </div>
+                <button id="testConnectionBtn" class="btn btn-secondary">Test Connection</button>
+            </div>
+
+            <div class="validation-message" id="validationMessage"></div>
+        </div>
+
+        <div class="settings-footer">
+            <div class="button-group">
+                <button id="resetBtn" class="btn btn-warning">Reset to Defaults</button>
+                <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
+                <button id="saveBtn" class="btn btn-primary">Save Settings</button>
+            </div>
+        </div>
+
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="spinner"></div>
+            <span>Testing connection...</span>
+        </div>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>
