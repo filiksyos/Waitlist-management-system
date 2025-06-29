@@ -383,9 +383,11 @@ class QueueManager {
     // Clear the form
     this.patientNameInput.value = '';
     
-    // Reset radio buttons
-    const radioButtons = document.querySelectorAll('input[name="doctorSelection"]');
-    radioButtons.forEach(radio => radio.checked = false);
+    // Reset radio buttons (only in multi-doctor mode)
+    if (this.doctorCount > 1) {
+      const radioButtons = document.querySelectorAll('input[name="doctorSelection"]');
+      radioButtons.forEach(radio => radio.checked = false);
+    }
     
     console.log('Patient added:', newPatient);
   }
