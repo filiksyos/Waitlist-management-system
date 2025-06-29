@@ -228,13 +228,13 @@ class QueueDisplay {
     // Update doctor 1 header
     const doctor1Header = document.querySelector('.doctor-header.doctor1');
     if (doctor1Header) {
-      doctor1Header.textContent = `${this.doctorNames.doctor1Name} Queue`;
+      doctor1Header.textContent = this.doctorNames.doctor1Name;
     }
     
     // Update doctor 2 header
     const doctor2Header = document.querySelector('.doctor-header.doctor2');
     if (doctor2Header) {
-      doctor2Header.textContent = `${this.doctorNames.doctor2Name} Queue`;
+      doctor2Header.textContent = this.doctorNames.doctor2Name;
     }
     
     console.log('Doctor headers updated with custom names');
