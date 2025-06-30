@@ -9,6 +9,9 @@
     "dev": "electron . --dev",
     "build": "electron-builder",
     "build-win": "electron-builder --win",
+    "build-win32": "electron-builder --win --ia32",
+    "build-win64": "electron-builder --win --x64",
+    "build-both": "electron-builder --win --ia32 --x64",
     "dist": "electron-builder --publish=never"
   },
   "dependencies": {
@@ -30,7 +33,8 @@
         {
           "target": "portable",
           "arch": [
-            "x64"
+            "x64",
+            "ia32"
           ]
         }
       ]
