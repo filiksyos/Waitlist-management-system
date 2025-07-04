@@ -16,8 +16,8 @@
     "ws": "^8.13.0"
   },
   "devDependencies": {
-    "electron": "^27.0.0",
-    "electron-builder": "^24.6.4"
+    "electron": "21.4.4",
+    "electron-builder": "^23.6.0"
   },
   "build": {
     "appId": "com.mebrej.clinic-queue-display",
